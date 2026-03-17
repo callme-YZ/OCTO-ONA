@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OCTO-ONA Schema",
+  "version": "0.1.0",
+  "definitions": {
+    "Entity": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string"},
+        "created": {"type": "string", "format": "date-time"},
+        "updated": {"type": "string", "format": "date-time"}
+      }
+    },
+    "Person": {
+      "allOf": [
+        {"$ref": "#/definitions/Entity"},
+        {
+          "properties": {
+            "type": {"const": "Person"},
+            "name": {"type": "string"},
+            "role": {"type": "string", "enum": ["决策者", "研究员", "协调者", "文档管理员"]},
+            "emoji": {"type": "string"},
+            "skills": {"type": "array", "items": {"type": "string"}}
+          },
+          "required": ["name", "role"]
+        }
+      ]
+    },
+    "Project": {
+      "allOf": [
+        {"$ref": "#/definitions/Entity"},
+        {
+          "properties": {
+            "type": {"const": "Project"},
+            "name": {"type": "string"},
+            "status": {"type": "string", "enum": ["active", "paused", "completed", "archived"]},
+            "owner": {"type": "string"},
+            "start_date": {"type": "string", "format": "date"},
+            "goal": {"type": "string"}
+          },
+          "required": ["name", "status", "owner"]
+        }
+      ]
+    },
+    "Task": {
+      "allOf": [
+        {"$ref": "#/definitions/Entity"},
+        {
+          "properties": {
+            "type": {"const": "Task"},
+            "title": {"type": "string"},
+            "status": {"type": "string", "enum": ["todo", "in_progress", "done", "blocked"]},
+            "assignee": {"type": "string"},
+            "dependencies": {"type": "array", "items": {"type": "string"}},
+            "deadline": {"type": "string", "format": "date"}
+          },
+          "required": ["title", "status"]
+        }
+      ]
+    },
+    "Concept": {
+      "allOf": [
+        {"$ref": "#/definitions/Entity"},
+        {
+          "properties": {
+            "type": {"const": "Concept"},
+            "name": {"type": "string"},
+            "category": {"type": "string", "enum": ["physics", "algorithm", "tool", "other"]},
+            "definition": {"type": "string"},
+            "references": {"type": "array", "items": {"type": "string"}}
+          },
+          "required": ["name", "category"]
+        }
+      ]
+    },
+    "Event": {
+      "allOf": [
+        {"$ref": "#/definitions/Entity"},
+        {
+          "properties": {
+            "type": {"const": "Event"},
+            "event_type": {"type": "string", "enum": ["decision", "milestone", "meeting", "error"]},
+            "date": {"type": "string", "format": "date-time"},
+            "participants": {"type": "array", "items": {"type": "string"}},
+            "description": {"type": "string"},
+            "impact": {"type": "array", "items": {"type": "string"}}
+          },
+          "required": ["event_type", "date", "description"]
+        }
+      ]
+    },
+    "Document": {
+      "allOf": [
+        {"$ref": "#/definitions/Entity"},
+        {
+          "properties": {
+            "type": {"const": "Document"},
+            "doc_type": {"type": "string", "enum": ["report", "paper", "note", "code"]},
+            "title": {"type": "string"},
+            "path": {"type": "string"},
+            "author": {"type": "string"},
+            "topics": {"type": "array", "items": {"type": "string"}}
+          },
+          "required": ["doc_type", "title", "author"]
+        }
+      ]
+    },
+    "Relation": {
+      "type": "object",
+      "required": ["type", "from", "to"],
+      "properties": {
+        "type": {"type": "string"},
+        "from": {"type": "string"},
+        "to": {"type": "string"},
+        "created": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}
