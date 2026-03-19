@@ -1,0 +1,188 @@
+/**
+ * OCTO-ONA Layer 1: DMWork Adapter
+ * 
+ * Reference implementation for DMWork database.
+ * Handles 5-table message sharding and to_uids inference.
+ */
+
+import mysql from 'mysql2/promise';
+import {
+  BaseAdapter,
+  SourceUser,
+  SourceMessage,
+  AdapterConfig,
+} from './base-adapter';
+
+// ============================================
+// DMWork Specific Types
+// ============================================
+
+interface DMWorkConfig extends AdapterConfig {
+  host: string;
+  port: number;
+  user: string;
+  password: string;
+  database: string;
+}
+
+interface DMWorkMessage {
+  message_id: string;
+  from_uid: string;
+  channel_id: string;
+  payload: Buffer | string;
+  created_at: number;
+}
+
+interface PayloadData {
+  mention?: {
+    uids?: string[];
+  };
+}
+
+// ============================================
+// DMWorkAdapter Class
+// ============================================
+
+export class DMWorkAdapter extends BaseAdapter {
+  private pool: mysql.Pool;
+  
+  constructor(config: DMWorkConfig) {
+    super(config);
+    
+    this.pool = mysql.createPool({
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+      database: config.database,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    });
+  }
+  
+  async fetchUsers(): Promise<SourceUser[]> {
+    const [userRows] = await this.pool.query<mysql.RowDataPacket[]>(
+      'SELECT uid, name, robot, email FROM user'
+    );
+    
+    const [robotRows] = await this.pool.query<mysql.RowDataPacket[]>(
+      'SELECT robot_id, creator_uid FROM robot'
+    );
+    
+    const robotCreators = new Map<string, string>();
+    for (const robot of robotRows) {
+      robotCreators.set(robot.robot_id, robot.creator_uid);
+    }
+    
+    const users: SourceUser[] = userRows.map(user => ({
+      id: user.uid,
+      name: user.name,
+      is_bot: Boolean(user.robot),
+      email: user.email || undefined,
+      creator_uid: Boolean(user.robot) ? robotCreators.get(user.uid) : undefined,
+    }));
+    
+    return users;
+  }
+  
+  async fetchMessages(
+    startTime?: Date,
+    endTime?: Date
+  ): Promise<SourceMessage[]> {
+    const tables = ['message', 'message1', 'message2', 'message3', 'message4'];
+    const allMessages: SourceMessage[] = [];
+    
+    for (const table of tables) {
+      let query = `
+        SELECT 
+          message_id,
+          from_uid,
+          channel_id,
+          payload,
+          created_at
+        FROM ${table}
+        WHERE 1=1
+      `;
+      
+      const params: any[] = [];
+      
+      if (startTime) {
+        query += ' AND created_at >= ?';
+        params.push(Math.floor(startTime.getTime() / 1000));
+      }
+      
+      if (endTime) {
+        query += ' AND created_at <= ?';
+        params.push(Math.floor(endTime.getTime() / 1000));
+      }
+      
+      const [rows] = await this.pool.query<mysql.RowDataPacket[]>(query, params);
+      
+      console.log(`Fetched ${rows.length} messages from ${table}`);
+      
+      for (const row of rows) {
+        const toUids = await this._inferToUids(row as DMWorkMessage);
+        
+        allMessages.push({
+          id: row.message_id,
+          from_uid: row.from_uid,
+          to_uids: toUids,
+          content: this._extractContent(row.payload),
+          timestamp: new Date(row.created_at * 1000),
+          context_id: row.channel_id,
+        });
+      }
+    }
+    
+    return allMessages;
+  }
+  
+  private async _inferToUids(msg: DMWorkMessage): Promise<string[]> {
+    const toUids: string[] = [];
+    
+    // Source 1: Direct mentions from payload
+    try {
+      const payloadStr = typeof msg.payload === 'string'
+        ? msg.payload
+        : msg.payload.toString('utf-8');
+      
+      const payload: PayloadData = JSON.parse(payloadStr);
+      
+      if (payload.mention?.uids && payload.mention.uids.length > 0) {
+        toUids.push(...payload.mention.uids);
+      }
+    } catch (error) {
+      // Ignore parse errors
+    }
+    
+    // Source 2: If no mentions, infer from group context
+    if (toUids.length === 0 && msg.channel_id) {
+      const [members] = await this.pool.query<mysql.RowDataPacket[]>(
+        'SELECT uid FROM group_member WHERE group_no = ? AND uid != ? LIMIT 50',
+        [msg.channel_id, msg.from_uid]
+      );
+      
+      toUids.push(...members.map(m => m.uid));
+    }
+    
+    return toUids;
+  }
+  
+  private _extractContent(payload: Buffer | string): string {
+    try {
+      const payloadStr = typeof payload === 'string'
+        ? payload
+        : payload.toString('utf-8');
+      
+      const data = JSON.parse(payloadStr);
+      return data.content || data.text || '';
+    } catch (error) {
+      return '';
+    }
+  }
+  
+  async close(): Promise<void> {
+    await this.pool.end();
+  }
+}
