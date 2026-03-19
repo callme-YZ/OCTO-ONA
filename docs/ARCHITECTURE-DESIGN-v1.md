@@ -1,13 +1,22 @@
-# OCTO-ONA Architecture Design v1.1
+# OCTO-ONA Architecture Design v2.0
 
 **Date**: 2026-03-19  
 **Author**: Mayo  
 **Status**: Draft → Design Complete (Metrics Layer)  
-**Last Updated**: 2026-03-19 16:46
+**Last Updated**: 2026-03-19 21:42  
+**Version**: v2.0 (Node.js/TypeScript 重写)
 
 ---
 
 ## 更新日志
+
+### v2.0 (2026-03-19 21:42)
+- 🔄 技术栈迁移：Python → Node.js/TypeScript
+- 🔄 数据验证库：Pydantic → zod
+- 🔄 图算法库：NetworkX → graphology
+- 🔄 数据库驱动：pymysql → mysql2
+- 🔄 模板引擎：Jinja2 → ejs
+- ✅ 保留所有设计逻辑和指标定义
 
 ### v1.1 (2026-03-19 16:46)
 - ✅ 完成Layer 4指标体系详细设计（20个指标）
@@ -55,51 +64,67 @@ Layer 1: 数据适配 (Data Adapters)
 **核心实体**:
 
 ### Node (节点)
-```python
-class HumanNode:
-    id: str
-    name: str
-    role: str       # 用于Leadership Distance
-    team: str       # 用于Silo Index
-    email: Optional[str]
-    timezone: Optional[str]
+```typescript
+import { z } from 'zod';
 
-class AIAgentNode:
-    id: str
-    bot_name: str
-    creator_uid: str
-    capabilities: List[str]
-    tags: List[str]  # 功能标签（T1-T8）
-    avg_response_time: Optional[float]
+const HumanNodeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  role: z.string(),       // 用于Leadership Distance
+  team: z.string(),       // 用于Silo Index
+  email: z.string().email().optional(),
+  timezone: z.string().optional(),
+});
+
+type HumanNode = z.infer<typeof HumanNodeSchema>;
+```
+
+```typescript
+const AIAgentNodeSchema = z.object({
+  id: z.string(),
+  bot_name: z.string(),
+  creator_uid: z.string(),
+  capabilities: z.array(z.string()),
+  tags: z.array(z.string()),  // 功能标签（T1-T8）
+  avg_response_time: z.number().optional(),
+});
+
+type AIAgentNode = z.infer<typeof AIAgentNodeSchema>;
 ```
 
 ### Edge (边)
-```python
-class Edge:
-    source: str
-    target: str
-    type: Literal["H2H", "H2B", "B2H", "B2B"]
-    weight: int       # 消息数
-    is_cross_team: bool  # 用于Silo Index
+```typescript
+const EdgeSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  type: z.enum(["H2H", "H2B", "B2H", "B2B"]),
+  weight: z.number().int(),       // 消息数
+  is_cross_team: z.boolean(),     // 用于Silo Index
+});
+
+type Edge = z.infer<typeof EdgeSchema>;
 ```
 
 ### Message (消息)
-```python
-class Message:
-    id: str
-    from_uid: str
-    to_uid: Optional[str]
-    channel_id: Optional[str]
-    content: str      # 用于品鉴识别
-    timestamp: datetime
-    mentions: List[str]
-    reply_to: Optional[str]  # 用于响应时间计算
-    
-    # Layer 3标注
-    is_connoisseurship: Optional[bool]
+```typescript
+const MessageSchema = z.object({
+  id: z.string(),
+  from_uid: z.string(),
+  to_uid: z.string().optional(),
+  channel_id: z.string().optional(),
+  content: z.string(),      // 用于品鉴识别
+  timestamp: z.date(),
+  mentions: z.array(z.string()),
+  reply_to: z.string().optional(),  // 用于响应时间计算
+  
+  // Layer 3标注
+  is_connoisseurship: z.boolean().optional(),
+});
+
+type Message = z.infer<typeof MessageSchema>;
 ```
 
-**详细设计**: 待补充Pydantic schema
+**详细设计**: 使用 zod schema 进行类型验证
 
 ---
 
@@ -108,7 +133,7 @@ class Message:
 **核心组件**:
 
 ### 1. 图算法库
-- NetworkX基础算法
+- graphology 基础算法
 - Degree/Betweenness/Closeness Centrality
 - 社区检测（Louvain）
 - 桥检测
@@ -241,9 +266,9 @@ class Message:
 
 **输出形式**:
 1. Web Dashboard (ECharts + Vue/React)
-2. PDF报告 (Matplotlib + ReportLab)
-3. CLI输出 (Rich/Tabulate)
-4. REST API (FastAPI)
+2. PDF报告 (ejs 模板引擎)
+3. CLI输出 (cli-table3 / chalk)
+4. REST API (Express.js / Fastify)
 
 **Dashboard页面规划**:
 1. **概览页**: 网络总览 + 6-8个关键指标
@@ -260,12 +285,28 @@ class Message:
 
 | 层级 | 技术选择 | 理由 |
 |------|---------|------|
-| Layer 1 | Python + 各平台API | 灵活，易维护 |
-| Layer 2 | Pydantic + JSON/Neo4j | 类型安全 + 图存储可选 |
-| Layer 3 | NetworkX + 规则/LLM | 成熟图算法 + 文本分析 |
-| Layer 4 | NumPy + Pandas | 高效计算 |
+| Layer 1 | Node.js/TypeScript + 各平台API | 类型安全，易维护 |
+| Layer 2 | zod + JSON/Neo4j | 类型验证 + 图存储可选 |
+| Layer 3 | graphology + 规则/LLM | 成熟图算法 + 文本分析 |
+| Layer 4 | TypeScript + 数值计算库 | 类型安全 + 高效计算 |
 | Layer 5 | Rule Engine | 可维护的诊断规则 |
-| Layer 6 | ECharts + FastAPI | Web友好 + Python生态 |
+| Layer 6 | ECharts + Express.js/Fastify | Web友好 + Node.js生态 |
+| 数据库 | mysql2 | MySQL连接驱动 |
+| 模板 | ejs | 轻量级模板引擎 |
+
+**核心依赖**:
+```json
+{
+  "dependencies": {
+    "zod": "^3.x",
+    "graphology": "^0.25.x",
+    "graphology-metrics": "^2.x",
+    "mysql2": "^3.x",
+    "ejs": "^3.x",
+    "express": "^4.x"
+  }
+}
+```
 
 ---
 
@@ -275,8 +316,8 @@ class Message:
 原始数据 (DMWork/Slack/Discord)
    ↓ Layer 1: 提取+转换
 标准网络数据 (JSON)
-   ↓ Layer 2: 数据模型
-图结构 (NetworkX Graph)
+   ↓ Layer 2: 数据模型 (zod验证)
+图结构 (graphology Graph)
    ↓ Layer 3: 分析引擎
    ├─ 图算法（中心性、社区）
    ├─ 文本分析（品鉴识别）
@@ -355,6 +396,14 @@ Dashboard/PDF/API
 - 可扩展（多种输出形式）
 - 参考MVC架构
 
+### 4. Python → Node.js/TypeScript
+
+**原因**:
+- 类型安全（TypeScript）
+- 统一技术栈（与DMWork对齐）
+- 更好的异步支持
+- 丰富的Web生态
+
 ---
 
 ## 对Nature论文的支撑
@@ -391,7 +440,7 @@ Dashboard/PDF/API
 ### 立即优先级
 
 1. **Layer 2数据模型**（1周）
-   - 完整Pydantic schema
+   - 完整zod schema
    - 数据验证规则
    - 序列化/反序列化
 
@@ -412,7 +461,7 @@ Dashboard/PDF/API
 
 5. **Layer 6可视化**（3周）
    - Dashboard原型
-   - PDF报告模板
+   - PDF报告模板（ejs）
 
 ### 长期优先级
 
@@ -426,4 +475,5 @@ Dashboard/PDF/API
 
 ---
 
-**设计状态**: Layer 4完成，准备Layer 2设计
+**设计状态**: Layer 4完成，准备Layer 2设计  
+**版本**: v2.0 (Node.js/TypeScript)

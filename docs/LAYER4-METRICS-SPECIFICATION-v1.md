@@ -1,7 +1,24 @@
-# OCTO-ONA 指标规范 v1.0
+# OCTO-ONA 指标规范 v2.0
 
-**更新时间**: 2026-03-19  
-**核心原则**: 指标驱动设计 - 从指标需求推导数据模型和可视化
+**更新时间**: 2026-03-19 21:42  
+**核心原则**: 指标驱动设计 - 从指标需求推导数据模型和可视化  
+**版本**: v2.0 (Node.js/TypeScript 重写)
+
+---
+
+## 版本更新
+
+### v2.0 (2026-03-19 21:42)
+- 🔄 技术栈迁移：Python → Node.js/TypeScript
+- 🔄 数据验证库：Pydantic → zod
+- 🔄 图算法库：NetworkX → graphology
+- 🔄 数据库驱动：pymysql → mysql2
+- 🔄 模板引擎：Jinja2 → ejs
+- ✅ 保留所有指标定义和算法逻辑
+
+### v1.0 (2026-03-19)
+- 初始版本
+- 确定21个指标（8 Bot标签 + 8 网络 + 5 品鉴）
 
 ---
 
@@ -101,11 +118,14 @@
 - 连接≥3个不同团队
 
 **判定算法**: （待详细设计）
-```python
-def is_cross_team_connector(bot, graph):
-    bc = betweenness_centrality(bot)
-    teams = get_connected_teams(bot, graph)
-    return bc > threshold_bc and len(teams) >= 3
+```typescript
+import { betweennessCentrality } from 'graphology-metrics/centrality';
+
+function isCrossTeamConnector(botId: string, graph: Graph): boolean {
+  const bc = betweennessCentrality(graph)[botId];
+  const teams = getConnectedTeams(botId, graph);
+  return bc > THRESHOLD_BC && teams.size >= 3;
+}
 ```
 
 **数据需求**:
@@ -128,12 +148,15 @@ def is_cross_team_connector(bot, graph):
 - 连接主要在单一团队内
 
 **判定算法**: （待详细设计）
-```python
-def is_intra_team_hub(bot, graph):
-    degree = degree_centrality(bot)
-    primary_team = get_primary_team(bot, graph)
-    cross_team_ratio = get_cross_team_edge_ratio(bot)
-    return degree > threshold_degree and cross_team_ratio < 0.3
+```typescript
+import { degreeCentrality } from 'graphology-metrics/centrality';
+
+function isIntraTeamHub(botId: string, graph: Graph): boolean {
+  const degree = degreeCentrality(graph)[botId];
+  const primaryTeam = getPrimaryTeam(botId, graph);
+  const crossTeamRatio = getCrossTeamEdgeRatio(botId, graph);
+  return degree > THRESHOLD_DEGREE && crossTeamRatio < 0.3;
+}
 ```
 
 **数据需求**:
@@ -155,11 +178,13 @@ def is_intra_team_hub(bot, graph):
 - 通常由该人类创建
 
 **判定算法**: （待详细设计）
-```python
-def is_human_proxy(bot, graph):
-    max_edge_weight = get_max_edge_weight(bot)
-    creator = get_creator(bot)
-    return max_edge_weight > threshold_weight or has_strong_tie_to_creator(bot, creator)
+```typescript
+function isHumanProxy(botId: string, graph: Graph): boolean {
+  const maxEdgeWeight = getMaxEdgeWeight(botId, graph);
+  const creator = getCreator(botId);
+  return maxEdgeWeight > THRESHOLD_WEIGHT || 
+         hasStrongTieToCreator(botId, creator, graph);
+}
 ```
 
 **数据需求**:
@@ -182,12 +207,15 @@ def is_human_proxy(bot, graph):
 - 接收消息 > 发送消息
 
 **判定算法**: （待详细设计）
-```python
-def is_information_aggregator(bot, graph):
-    degree = degree_centrality(bot)
-    in_degree = in_degree_centrality(bot)
-    out_degree = out_degree_centrality(bot)
-    return degree > threshold_degree and in_degree > out_degree
+```typescript
+import { degreeCentrality } from 'graphology-metrics/centrality';
+
+function isInformationAggregator(botId: string, graph: Graph): boolean {
+  const degree = degreeCentrality(graph)[botId];
+  const inDegree = graph.inDegree(botId);
+  const outDegree = graph.outDegree(botId);
+  return degree > THRESHOLD_DEGREE && inDegree > outDegree;
+}
 ```
 
 **数据需求**:
@@ -208,11 +236,12 @@ def is_information_aggregator(bot, graph):
 - 消息数高于P75分位数
 
 **判定算法**: （待详细设计）
-```python
-def is_high_activity(bot, graph):
-    msg_count = get_message_count(bot)
-    p75 = percentile(all_bot_msg_counts, 75)
-    return msg_count > p75
+```typescript
+function isHighActivity(botId: string, graph: Graph): boolean {
+  const msgCount = getMessageCount(botId);
+  const p75 = percentile(getAllBotMessageCounts(graph), 75);
+  return msgCount > p75;
+}
 ```
 
 **数据需求**:
@@ -227,24 +256,37 @@ def is_high_activity(bot, graph):
 
 ### 多标签示例
 
-```json
-{
-  "bot_id": "chenpipi_bot",
-  "bot_name": "陈皮皮",
-  "tags": [
+```typescript
+interface BotTags {
+  bot_id: string;
+  bot_name: string;
+  tags: string[];
+  metrics: {
+    betweenness: number;
+    degree: number;
+    teams_connected: number;
+    msg_count: number;
+    avg_response_time: number;
+  };
+}
+
+const example: BotTags = {
+  bot_id: "chenpipi_bot",
+  bot_name: "陈皮皮",
+  tags: [
     "跨团队连接",      // T1, P0
     "信息聚合",        // T4, P0
     "高活跃",          // T5, P0
     "快速响应"         // T6, P1
   ],
-  "metrics": {
-    "betweenness": 0.25,
-    "degree": 0.60,
-    "teams_connected": 4,
-    "msg_count": 816,
-    "avg_response_time": 8
+  metrics: {
+    betweenness: 0.25,
+    degree: 0.60,
+    teams_connected: 4,
+    msg_count: 816,
+    avg_response_time: 8
   }
-}
+};
 ```
 
 ---
@@ -254,47 +296,57 @@ def is_high_activity(bot, graph):
 ### Layer 2必须提供的数据
 
 #### 节点数据
-```python
-class HumanNode:
-    id: str
-    name: str
-    team: str  # 必需（T1/T2判定）
+```typescript
+import { z } from 'zod';
 
-class AIAgentNode:
-    id: str
-    bot_name: str
-    creator_uid: str  # 必需（T3判定）
-    tags: List[str]  # 标签列表（Layer 4计算后回填）
+const HumanNodeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  team: z.string(),  // 必需（T1/T2判定）
+});
+
+const AIAgentNodeSchema = z.object({
+  id: z.string(),
+  bot_name: z.string(),
+  creator_uid: z.string(),  // 必需（T3判定）
+  tags: z.array(z.string()),  // 标签列表（Layer 4计算后回填）
+});
 ```
 
 #### 边数据
-```python
-class Edge:
-    source: str
-    target: str
-    type: Literal["H2H", "H2B", "B2H", "B2B"]
-    weight: int  # 消息数，必需（T3/T4判定）
-    is_cross_team: bool  # 是否跨团队边（T1/T2判定）
+```typescript
+const EdgeSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  type: z.enum(["H2H", "H2B", "B2H", "B2B"]),
+  weight: z.number().int(),  // 消息数，必需（T3/T4判定）
+  is_cross_team: z.boolean(),  // 是否跨团队边（T1/T2判定）
+});
 ```
 
 #### 消息数据
-```python
-class Message:
-    id: str
-    from_uid: str
-    to_uid: Optional[str]
-    channel_id: Optional[str]
-    timestamp: datetime
-    # T5需要: 消息总数统计
+```typescript
+const MessageSchema = z.object({
+  id: z.string(),
+  from_uid: z.string(),
+  to_uid: z.string().optional(),
+  channel_id: z.string().optional(),
+  timestamp: z.date(),
+  // T5需要: 消息总数统计
+});
 ```
 
 #### 图数据
-```python
-graph: NetworkX.DiGraph  # 有向图（区分in/out degree）
-# 需要计算:
-# - Betweenness Centrality (T1)
-# - Degree Centrality (T2)
-# - In-degree / Out-degree (T4)
+```typescript
+import Graph from 'graphology';
+
+// 有向图（区分in/out degree）
+const graph = new Graph({ type: 'directed' });
+
+// 需要计算:
+// - Betweenness Centrality (T1) - 使用 graphology-metrics
+// - Degree Centrality (T2) - 使用 graphology-metrics
+// - In-degree / Out-degree (T4) - graph.inDegree() / graph.outDegree()
 ```
 
 ---
@@ -322,18 +374,72 @@ graph: NetworkX.DiGraph  # 有向图（区分in/out degree）
 
 ---
 
-## 五、下一步工作
+## 五、技术栈
+
+### 核心依赖
+
+```json
+{
+  "dependencies": {
+    "zod": "^3.x",
+    "graphology": "^0.25.x",
+    "graphology-metrics": "^2.x",
+    "mysql2": "^3.x",
+    "ejs": "^3.x"
+  }
+}
+```
+
+### 图算法库选择
+
+**graphology** 替代 **NetworkX**:
+- 高性能（原生JS/TS）
+- 类型安全
+- 丰富的算法库（graphology-metrics）
+- 支持有向图/无向图
+- 社区活跃
+
+### 数据验证
+
+**zod** 替代 **Pydantic**:
+- TypeScript原生支持
+- 运行时类型验证
+- 类型推断（z.infer）
+- 组合式schema
+- 错误友好
+
+### 数据库驱动
+
+**mysql2** 替代 **pymysql**:
+- Promise支持
+- 预处理语句
+- 连接池管理
+- TypeScript类型
+
+### 模板引擎
+
+**ejs** 替代 **Jinja2**:
+- JavaScript语法
+- 简单易用
+- PDF报告生成
+- HTML邮件模板
+
+---
+
+## 六、下一步工作
 
 1. **定义P0标签算法** — 5个标签的详细判定逻辑和阈值
 2. **基于Octo数据标定阈值** — 计算BC/Degree的P25/P50/P75分位数
 3. **完善Layer 2数据模型** — 补充team字段、is_cross_team字段
-4. **实现标签计算函数** — Python函数，输入graph输出标签
+4. **实现标签计算函数** — TypeScript函数，输入graph输出标签
 5. **设计可视化原型** — 网络图+标签云
 
 ---
 
 **变更记录**:
+- 2026-03-19 v2.0: 技术栈迁移到Node.js/TypeScript
+- 2026-03-19 v2.0: Python→TS, Pydantic→zod, NetworkX→graphology, pymysql→mysql2, Jinja2→ejs
+- 2026-03-19 v1.1: 新增L3.5 Hub Score指标
 - 2026-03-19 v1.0: L2.1从"Bot角色分布"改为"Bot功能标签"，采用多标签体系
 - 2026-03-19 v1.0: 确定8个标签，分P0/P1/P2三级优先级
 - 2026-03-19 v1.0: P0聚焦网络层面（ONA核心），P1聚焦个体特性
-- 2026-03-19 v1.1: 新增L3.5 Hub Score指标，总指标数从18个增至21个（8 Bot标签 + 8 网络 + 5 品鉴）
