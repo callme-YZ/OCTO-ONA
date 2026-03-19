@@ -1,37 +1,26 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-*.egg-info/
-dist/
-build/
+# Dependencies
+node_modules/
 
-# IDEs
+# Build output
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Data
-data/*.db
-data/*.sqlite
-data/*.json
-!data/schema.json
+# Test
+coverage/
 
 # Logs
 *.log
-logs/
+npm-debug.log*
 
-# Temporary
-tmp/
-temp/
-*.tmp
+# OS
+.DS_Store
