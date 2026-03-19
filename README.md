@@ -46,15 +46,15 @@ Layer 1: Data Adapter           → BaseAdapter Interface + Reference Implementa
 
 | Layer | Document | Description |
 |-------|----------|-------------|
-| **Layer 1** | [LAYER1-DATA-ADAPTER-v1.md](LAYER1-DATA-ADAPTER-v1.md) | Data adapter interface + DMWork reference implementation |
-| **Layer 2** | [LAYER2-DATA-MODEL-v1.md](LAYER2-DATA-MODEL-v1.md) | Pydantic data models (HumanNode, AIAgentNode, Edge, Message, NetworkGraph) |
-| **Layer 3** | [LAYER3-ANALYSIS-ENGINE-v1.md](LAYER3-ANALYSIS-ENGINE-v1.md) | Graph algorithms (NetworkX) + connoisseurship detection |
-| **Layer 4** | [LAYER4-METRICS-SPECIFICATION-v1.md](LAYER4-METRICS-SPECIFICATION-v1.md) | Metrics overview + specifications |
-| | [LAYER4-BOT-TAGS-v1.md](LAYER4-BOT-TAGS-v1.md) | 8 Bot functional tags (multi-label system) |
-| | [LAYER4-NETWORK-METRICS-v1.md](LAYER4-NETWORK-METRICS-v1.md) | 8 Traditional ONA metrics (Degree, BC, Density, etc.) |
-| | [LAYER4-CONNOISSEURSHIP-METRICS-v1.md](LAYER4-CONNOISSEURSHIP-METRICS-v1.md) | 4 Connoisseurship metrics (frequency, reach, conversion, amplification) |
-| **Layer 5** | [LAYER5-INSIGHT-ENGINE-v1.md](LAYER5-INSIGHT-ENGINE-v1.md) | 13 diagnostic rules + insight generation |
-| **Layer 6** | [LAYER6-VISUALIZATION-v1.md](LAYER6-VISUALIZATION-v1.md) | 6-page Dashboard + ChatBot + multi-format output |
+| **Layer 1** | [LAYER1-DATA-ADAPTER-v1.md](docs/LAYER1-DATA-ADAPTER-v1.md) | Data adapter interface + DMWork reference implementation |
+| **Layer 2** | [LAYER2-DATA-MODEL-v1.md](docs/LAYER2-DATA-MODEL-v1.md) | Pydantic data models (HumanNode, AIAgentNode, Edge, Message, NetworkGraph) |
+| **Layer 3** | [LAYER3-ANALYSIS-ENGINE-v1.md](docs/LAYER3-ANALYSIS-ENGINE-v1.md) | Graph algorithms (NetworkX) + connoisseurship detection |
+| **Layer 4** | [LAYER4-METRICS-SPECIFICATION-v1.md](docs/LAYER4-METRICS-SPECIFICATION-v1.md) | Metrics overview + specifications |
+| | [LAYER4-BOT-TAGS-v1.md](docs/LAYER4-BOT-TAGS-v1.md) | 8 Bot functional tags (multi-label system) |
+| | [LAYER4-NETWORK-METRICS-v1.md](docs/LAYER4-NETWORK-METRICS-v1.md) | 8 Traditional ONA metrics (Degree, BC, Density, etc.) |
+| | [LAYER4-CONNOISSEURSHIP-METRICS-v1.md](docs/LAYER4-CONNOISSEURSHIP-METRICS-v1.md) | 4 Connoisseurship metrics (frequency, reach, conversion, amplification) |
+| **Layer 5** | [LAYER5-INSIGHT-ENGINE-v1.md](docs/LAYER5-INSIGHT-ENGINE-v1.md) | 13 diagnostic rules + insight generation |
+| **Layer 6** | [LAYER6-VISUALIZATION-v1.md](docs/LAYER6-VISUALIZATION-v1.md) | 6-page Dashboard + ChatBot + multi-format output |
 
 ---
 
@@ -232,16 +232,16 @@ octo-ona serve --port 8080
 
 ### Design Documents
 
-- [ARCHITECTURE-DESIGN-v1.md](ARCHITECTURE-DESIGN-v1.md) — Overall 6-layer architecture
-- [LAYER1-DATA-ADAPTER-v1.md](LAYER1-DATA-ADAPTER-v1.md) — Data adapter interface
-- [LAYER2-DATA-MODEL-v1.md](LAYER2-DATA-MODEL-v1.md) — Pydantic data models
-- [LAYER3-ANALYSIS-ENGINE-v1.md](LAYER3-ANALYSIS-ENGINE-v1.md) — Analysis engine
-- [LAYER4-METRICS-SPECIFICATION-v1.md](LAYER4-METRICS-SPECIFICATION-v1.md) — Metrics overview
-- [LAYER4-BOT-TAGS-v1.md](LAYER4-BOT-TAGS-v1.md) — Bot functional tags
-- [LAYER4-NETWORK-METRICS-v1.md](LAYER4-NETWORK-METRICS-v1.md) — Network metrics
-- [LAYER4-CONNOISSEURSHIP-METRICS-v1.md](LAYER4-CONNOISSEURSHIP-METRICS-v1.md) — Connoisseurship metrics
-- [LAYER5-INSIGHT-ENGINE-v1.md](LAYER5-INSIGHT-ENGINE-v1.md) — Insight engine
-- [LAYER6-VISUALIZATION-v1.md](LAYER6-VISUALIZATION-v1.md) — Visualization
+- [ARCHITECTURE-DESIGN-v1.md](docs/ARCHITECTURE-DESIGN-v1.md) — Overall 6-layer architecture
+- [LAYER1-DATA-ADAPTER-v1.md](docs/LAYER1-DATA-ADAPTER-v1.md) — Data adapter interface
+- [LAYER2-DATA-MODEL-v1.md](docs/LAYER2-DATA-MODEL-v1.md) — Pydantic data models
+- [LAYER3-ANALYSIS-ENGINE-v1.md](docs/LAYER3-ANALYSIS-ENGINE-v1.md) — Analysis engine
+- [LAYER4-METRICS-SPECIFICATION-v1.md](docs/LAYER4-METRICS-SPECIFICATION-v1.md) — Metrics overview
+- [LAYER4-BOT-TAGS-v1.md](docs/LAYER4-BOT-TAGS-v1.md) — Bot functional tags
+- [LAYER4-NETWORK-METRICS-v1.md](docs/LAYER4-NETWORK-METRICS-v1.md) — Network metrics
+- [LAYER4-CONNOISSEURSHIP-METRICS-v1.md](docs/LAYER4-CONNOISSEURSHIP-METRICS-v1.md) — Connoisseurship metrics
+- [LAYER5-INSIGHT-ENGINE-v1.md](docs/LAYER5-INSIGHT-ENGINE-v1.md) — Insight engine
+- [LAYER6-VISUALIZATION-v1.md](docs/LAYER6-VISUALIZATION-v1.md) — Visualization
 
 ---
 
