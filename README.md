@@ -19,7 +19,7 @@ OCTO-ONA is an open-source framework for **Human-AI Collaboration Network Analys
 ### Key Features
 
 - ✅ **6-Layer Architecture** — Modular design from data ingestion to visualization
-- ✅ **20 Metrics** — 8 Bot tags + 8 network metrics + 4 connoisseurship metrics
+- ✅ **21 Metrics** — 8 Bot tags + 8 network metrics + 5 connoisseurship metrics
 - ✅ **13 Diagnostic Rules** — Automated insight generation (burnout, silos, bot effectiveness)
 - ✅ **Multi-Output Formats** — Web Dashboard, ChatBot, PDF, CLI, REST API
 - ✅ **Extensible Adapters** — Support for any data source (DMWork, Slack, Discord, etc.)
@@ -35,7 +35,7 @@ Layer 6: Visualization          → Web Dashboard, ChatBot, PDF, CLI, API
            ↑
 Layer 5: Insight Engine         → 13 Diagnostic Rules → Actionable Recommendations
            ↑
-Layer 4: Metrics Calculation    → 20 Metrics (Bot Tags + Network + Connoisseurship)
+Layer 4: Metrics Calculation    → 21 Metrics (Bot Tags + Network + Connoisseurship)
            ↑
 Layer 3: Analysis Engine        → Graph Algorithms + Connoisseurship Detection
            ↑
@@ -62,7 +62,7 @@ Layer 1: Data Adapter           → BaseAdapter Interface + Reference Implementa
 
 ## 🔬 Metrics System
 
-### 20 Core Metrics
+### 21 Core Metrics
 
 #### Bot Functional Tags (8)
 
@@ -100,12 +100,13 @@ Layer 1: Data Adapter           → BaseAdapter Interface + Reference Implementa
 
 ---
 
-#### Connoisseurship Metrics (4)
+#### Connoisseurship Metrics (5)
 
-**P0 Core Metrics (3)**:
+**P0 Core Metrics (4)**:
 - **L3.1**: Connoisseurship Frequency (CF) — % of messages that are connoisseurship
 - **L3.2**: Connoisseurship Reach (CR) — % of network reached by connoisseurship
 - **L3.3**: Connoisseurship Conversion (CC) — % of connoisseurship that led to execution
+- **L3.5**: **Hub Score (HS)** 🆕 — Mentions received / messages sent (influence ratio)
 
 **P1 Enhancement Metric (1)**:
 - **L3.4**: Connoisseurship Amplification (CA) — Rebroadcast ratio

@@ -15,6 +15,7 @@
 | L3.2 | 品鉴影响广度 | Connoisseurship Reach | 触达节点数 | P0 |
 | L3.3 | 品鉴执行转化 | Connoisseurship Conversion | 执行比例 | P0 |
 | L3.4 | 品鉴网络放大 | Connoisseurship Amplification | 传播次数 | P1 |
+| **L3.5** | **Hub Score** 🆕 | **Hub Score** | **影响力比率** | **P0** |
 
 ### 设计理念
 
@@ -670,13 +671,218 @@ def detect_retelling_advanced(message: str,
 
 ---
 
+## 六、L3.5 Hub Score (HS) - 品鉴影响力比率 🆕
+
+### 指标定义
+
+**Hub Score = 被提及次数 / 发送消息数**
+
+**核心测量**: 影响力 vs 活跃度比率
+
+### 背景
+
+Hub Score是OCTO-ONA的核心发现，源自Octo团队真实数据分析。通过Hub Score识别出完美的五层品鉴金字塔：
+
+| 层级 | 角色 | Hub Score | 特征 |
+|------|------|-----------|------|
+| Layer 5 | 战略权威 | > 3.0 | 被咨询多，发言少（辉哥=4.0） |
+| Layer 4 | 技术裁判 | ∞ | 只被咨询，不发言（嘉伟=∞） |
+| Layer 3 | Bot接口 | 3.0-12.0 | 高频被调用（产品管家=12.6） |
+| Layer 2 | 主动管理 | 0.3-1.0 | 主动推动（黄楠=0.3） |
+| Layer 1 | 纯执行 | < 0.1 | 大量输出（刘乐君=0.0） |
+
+### 公式
+
+```
+HS(v) = M_received(v) / M_sent(v)
+
+M_received = Count(被提及次数)
+M_sent = Count(发送消息数)
+```
+
+**特殊情况**:
+- M_sent = 0 且 M_received > 0: HS = ∞（纯被动权威）
+- M_sent = 0 且 M_received = 0: HS = 0.0（无活动）
+
+### 值域
+
+[0, +∞]，包括特殊值 ∞
+
+### 业务含义
+
+#### **高Hub Score (> 3.0) - 战略权威**
+- **特征**: 被咨询多，主动发言少
+- **角色**: 决策层、战略顾问
+- **案例**: 辉哥（HS=4.0，1,187次被@，299条发送）
+- **价值**: 被动影响力强，判断被高度认可
+
+#### **极高Hub Score (∞) - 技术裁判**
+- **特征**: 只被咨询，从不主动发言
+- **角色**: 最终裁判、技术权威
+- **案例**: 嘉伟（HS=∞，405次被@，0条发送）
+- **价值**: 判断具有最终决定权
+
+#### **中Hub Score (0.3-3.0) - Bot接口/主动管理**
+- **特征**: 被咨询与发言相当
+- **角色**: Bot、项目经理、一线管理者
+- **案例**: 产品管家Bot（HS=12.6）、黄楠（HS=0.3）
+
+#### **低Hub Score (< 0.1) - 纯执行**
+- **特征**: 大量发言，很少被咨询
+- **角色**: 执行者、一线开发
+- **案例**: 刘乐君（HS=0.0，97次被@，5,270条发送）
+
+### 算法实现
+
+```python
+def calculate_hub_score(messages: List[Message]) -> Dict[str, float]:
+    """
+    计算Hub Score
+    
+    Args:
+        messages: 所有消息列表
+    
+    Returns:
+        {node_id: hub_score, ...}
+    """
+    mentions = {}  # {node_id: 被@次数}
+    messages_sent = {}  # {node_id: 发送消息数}
+    
+    for msg in messages:
+        # 统计发送消息
+        messages_sent[msg.from_uid] = messages_sent.get(msg.from_uid, 0) + 1
+        
+        # 统计被@（to_uids中的每个人都算被@）
+        for mentioned_uid in msg.to_uids:
+            mentions[mentioned_uid] = mentions.get(mentioned_uid, 0) + 1
+    
+    # 计算Hub Score
+    hub_scores = {}
+    all_nodes = set(list(mentions.keys()) + list(messages_sent.keys()))
+    
+    for uid in all_nodes:
+        m_received = mentions.get(uid, 0)
+        m_sent = messages_sent.get(uid, 0)
+        
+        if m_sent == 0:
+            # 特殊情况：只被@，不发言
+            hub_scores[uid] = float('inf') if m_received > 0 else 0.0
+        else:
+            hub_scores[uid] = m_received / m_sent
+    
+    return hub_scores
+
+
+def classify_connoisseur_by_hub_score(hub_score: float) -> str:
+    """
+    基于Hub Score分类品鉴者层级
+    
+    Args:
+        hub_score: Hub Score值
+    
+    Returns:
+        层级标签 (L1-L5)
+    """
+    if hub_score == float('inf'):
+        return "L4_技术裁判"
+    elif hub_score > 3.0:
+        return "L5_战略权威"
+    elif hub_score >= 0.3:
+        return "L2_主动管理"
+    elif hub_score > 0:
+        return "L1_纯执行"
+    else:
+        return "L0_无活动"
+```
+
+### 数据需求
+
+**消息数据**:
+- `message.from_uid`: 发送者
+- `message.to_uids`: 接收者列表
+
+**无需额外数据** — Hub Score仅基于消息元数据
+
+### 健康范围
+
+**组织层面**:
+- HS > 3.0 人数占比: 5-15%（决策层合理范围）
+- HS = ∞ 人数: 1-3人（最终裁判不宜过多）
+- HS < 0.1 人数占比: > 50%（执行层应占多数）
+
+**金字塔结构健康指标**:
+```
+L5 (HS>3.0):      5-10%   ▲
+L4 (HS=∞):        1-3%    ▲
+L2-L3 (0.3-3.0):  20-30%  ■■
+L1 (HS<0.1):      60-75%  ■■■■■
+```
+
+### 与其他指标的关系
+
+#### **Hub Score vs Degree Centrality**
+- Degree: 总连接数（活跃度）
+- Hub Score: 被动影响 / 主动活跃（影响力 vs 活跃度比）
+
+#### **Hub Score vs Betweenness Centrality**
+- BC: 桥梁作用（信息中转）
+- Hub Score: 决策权威（被咨询频率）
+
+#### **Hub Score vs 品鉴频率（L3.1）**
+- L3.1: 主动品鉴占比
+- L3.5: 被动品鉴强度（被咨询）
+
+**组合解读**:
+- 高Hub Score + 高品鉴频率 = 全能品鉴者（主动+被动都强）
+- 高Hub Score + 低品鉴频率 = 被动权威（嘉伟型）
+- 低Hub Score + 高品鉴频率 = 主动品鉴者（刘乐君型）
+
+### 可视化
+
+1. **金字塔图**: 5层品鉴金字塔（Mermaid）
+2. **散点图**: Hub Score vs 发送消息数
+3. **条形图**: Top 10 Hub Score节点
+4. **热力图**: Hub Score分布（团队×时间）
+
+### Layer 5洞察规则
+
+```python
+DiagnosticRule(
+    id="CONNOISSEUR_PYRAMID_IMBALANCE",
+    name="品鉴金字塔失衡",
+    category="connoisseurship",
+    severity="warning",
+    condition=lambda m: (
+        m.get("hub_score_layer5_ratio", 0) > 0.15 or
+        m.get("hub_score_layer1_ratio", 0) < 0.5
+    ),
+    description="品鉴金字塔结构失衡：L5占比 {hub_score_layer5_ratio:.1%}（健康范围5-15%），L1占比 {hub_score_layer1_ratio:.1%}（健康范围>50%）",
+    recommendations=[
+        "如果L5过多：组织层级过深，决策效率低",
+        "如果L1过少：缺少执行力，团队规模不足",
+        "理想结构：金字塔形（L1 > L2 > L5）"
+    ],
+    related_metrics=["L3.5"],
+    priority=7
+)
+```
+
+### 实施优先级
+
+**P0 - 核心指标**
+
+Hub Score是OCTO-ONA的灵魂指标，必须在第一批实现。
+
+---
+
 ## 七、L3指标实施优先级
 
-### P0指标（必须实现，3个）
+### P0指标（必须实现，4个）
 
 1. **L3.1 品鉴行为频率** — 基础统计
 2. **L3.2 品鉴影响广度** — 影响范围
 3. **L3.3 品鉴执行转化** — 执行效果
+4. **L3.5 Hub Score** 🆕 — 品鉴金字塔核心指标
 
 ### P1指标（增强分析，1个）
 
@@ -819,8 +1025,6 @@ def detect_retelling_advanced(message: str,
 
 **总计**: 20个指标完整定义
 
-**接下来可以**:
-1. 设计Layer 2数据模型（Pydantic schema）
-2. 设计Layer 5洞察引擎（诊断规则库）
-3. 设计Layer 6可视化（Dashboard原型）
-4. 或者其他？
+**变更记录**:
+- 2026-03-19 v1.0: 初始版本，4个品鉴指标（L3.1-L3.4）
+- 2026-03-19 v1.1: 新增L3.5 Hub Score指标（品鉴金字塔核心），P0指标从3个增至4个

@@ -5,7 +5,7 @@
 
 ---
 
-## 一、指标总览（18个）
+## 一、指标总览（21个）
 
 ### L1: 网络基础指标（8个）
 | ID | 指标名称 | 英文 | 优先级 |
@@ -29,13 +29,14 @@
 | L2.5 | Agent响应效率 | Agent Response Efficiency | P1 |
 | L2.6 | 多Bot协同 | Multi-Bot Synergy | P2 |
 
-### L3: 品鉴价值指标（4个）
+### L3: 品鉴价值指标（5个）
 | ID | 指标名称 | 英文 | 优先级 |
 |----|---------|------|--------|
-| L3.1 | Hub分数 | Hub Score | P0 |
-| L3.2 | 反思性判断分数 | Reflective Judgment Score | P0 |
-| L3.3 | 网络放大系数 | Network Amplification | P0 |
-| L3.4 | 决策影响力 | Decision Impact | P1 |
+| L3.1 | 品鉴行为频率 | Connoisseurship Frequency | P0 |
+| L3.2 | 品鉴影响广度 | Connoisseurship Reach | P0 |
+| L3.3 | 品鉴执行转化 | Connoisseurship Conversion | P0 |
+| L3.4 | 品鉴网络放大 | Connoisseurship Amplification | P1 |
+| **L3.5** | **Hub Score** 🆕 | **Hub Score** | **P0** |
 
 ---
 
@@ -332,6 +333,7 @@ graph: NetworkX.DiGraph  # 有向图（区分in/out degree）
 ---
 
 **变更记录**:
-- 2026-03-19: L2.1从"Bot角色分布"改为"Bot功能标签"，采用多标签体系
-- 2026-03-19: 确定8个标签，分P0/P1/P2三级优先级
-- 2026-03-19: P0聚焦网络层面（ONA核心），P1聚焦个体特性
+- 2026-03-19 v1.0: L2.1从"Bot角色分布"改为"Bot功能标签"，采用多标签体系
+- 2026-03-19 v1.0: 确定8个标签，分P0/P1/P2三级优先级
+- 2026-03-19 v1.0: P0聚焦网络层面（ONA核心），P1聚焦个体特性
+- 2026-03-19 v1.1: 新增L3.5 Hub Score指标，总指标数从18个增至21个（8 Bot标签 + 8 网络 + 5 品鉴）

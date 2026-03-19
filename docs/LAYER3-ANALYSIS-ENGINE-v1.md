@@ -128,6 +128,68 @@ class AnalysisEngine:
         else:
             return dict(nx.all_pairs_shortest_path_length(self.G))
     
+    # === Hub Score计算模块 ===
+    
+    def calculate_hub_score(self) -> Dict[str, float]:
+        """
+        计算Hub Score（OCTO核心指标）
+        
+        Hub Score = mentions_received / messages_sent
+        
+        含义：影响力 vs 活跃度比率
+        - 高Hub Score: 被动影响力强（被咨询多，发言少）
+        - 低Hub Score: 主动执行者（发言多，被咨询少）
+        
+        Returns:
+            {node_id: hub_score, ...}
+        """
+        mentions = {}  # {node_id: count}
+        messages_sent = {}  # {node_id: count}
+        
+        for msg in self.network_graph.messages or []:
+            # 统计发送消息
+            messages_sent[msg.from_uid] = messages_sent.get(msg.from_uid, 0) + 1
+            
+            # 统计被@（to_uids中的每个人都算被@）
+            for mentioned_uid in msg.to_uids:
+                mentions[mentioned_uid] = mentions.get(mentioned_uid, 0) + 1
+        
+        # 计算Hub Score
+        hub_scores = {}
+        all_nodes = set(list(mentions.keys()) + list(messages_sent.keys()))
+        
+        for uid in all_nodes:
+            mention_count = mentions.get(uid, 0)
+            sent_count = messages_sent.get(uid, 0)
+            
+            if sent_count == 0:
+                # 特殊情况：只被@，不发言
+                hub_scores[uid] = float('inf') if mention_count > 0 else 0.0
+            else:
+                hub_scores[uid] = mention_count / sent_count
+        
+        return hub_scores
+    
+    def identify_connoisseurs_by_hub_score(self, 
+                                            threshold: float = 1.0) -> List[str]:
+        """
+        基于Hub Score识别品鉴者（被动品鉴）
+        
+        Args:
+            threshold: Hub Score阈值（默认1.0，即被@多于发言）
+        
+        Returns:
+            品鉴者UID列表
+        """
+        hub_scores = self.calculate_hub_score()
+        
+        connoisseurs = [
+            uid for uid, score in hub_scores.items()
+            if score >= threshold and score != float('inf')
+        ]
+        
+        return connoisseurs
+    
     # === 品鉴识别模块 ===
     
     def identify_connoisseurship(self, 
@@ -702,4 +764,5 @@ def test_connoisseurship_detection():
 ---
 
 **变更记录**:
-- 2026-03-19: v1.0初始版本，定义AnalysisEngine类、品鉴识别算法、图算法封装
+- 2026-03-19 v1.0: 初始版本，定义AnalysisEngine类、品鉴识别算法、图算法封装
+- 2026-03-19 v1.1: 新增Hub Score计算模块（calculate_hub_score + identify_connoisseurs_by_hub_score）
