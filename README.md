@@ -1,4 +1,6 @@
-# OCTO-ONA: Ontology-based Context and Task Orchestration for Organizational Network Analysis
+# OCTO-ONA
+
+**A Human-AI Collaboration Network Analysis Framework**
 
 **Version**: 1.0.0 (Design Phase Complete)  
 **Status**: Design Complete, Implementation Pending  
