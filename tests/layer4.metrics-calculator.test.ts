@@ -271,4 +271,94 @@ describe('Layer 4: MetricsCalculator', () => {
       }
     });
   });
+  
+  // ========================================
+  // Network Metrics Tests (L1.5, L1.6, L1.7)
+  // ========================================
+  
+  describe('Extended Network Metrics', () => {
+    let networkGraph: NetworkGraph;
+    let networkCalculator: MetricsCalculator;
+    
+    beforeEach(() => {
+      const humans: HumanNode[] = [
+        { id: 'h1', name: 'Leader', type: 'human', team: 'A' },
+        { id: 'h2', name: 'Member1', type: 'human', team: 'A' },
+        { id: 'h3', name: 'Member2', type: 'human', team: 'B' },
+        { id: 'h4', name: 'Isolated', type: 'human', team: 'B' },
+      ];
+      
+      const edges: Edge[] = [
+        // h1 is central (leader)
+        { source: 'h1', target: 'h2', edge_type: 'H2H', weight: 10, is_cross_team: false, message_ids: [] },
+        { source: 'h1', target: 'h3', edge_type: 'H2H', weight: 5, is_cross_team: true, message_ids: [] },
+        
+        // h2-h3 cross-team
+        { source: 'h2', target: 'h3', edge_type: 'H2H', weight: 3, is_cross_team: true, message_ids: [] },
+        
+        // h4 isolated (no edges)
+      ];
+      
+      const messages: Message[] = [
+        // h1 receives many @mentions (high Hub Score → leader)
+        { id: 'm1', from_uid: 'h2', to_uids: ['h1'], content: '@Leader 请指导', timestamp: new Date() },
+        { id: 'm2', from_uid: 'h3', to_uids: ['h1'], content: '@Leader 意见？', timestamp: new Date() },
+        { id: 'm3', from_uid: 'h1', to_uids: ['h2'], content: '好的', timestamp: new Date() },
+      ];
+      
+      networkGraph = {
+        graph_id: 'network_test',
+        description: 'Network metrics test',
+        start_time: new Date('2026-03-01'),
+        end_time: new Date('2026-03-18'),
+        human_nodes: humans,
+        ai_agent_nodes: [],
+        edges,
+        messages,
+        summary: {
+          total_nodes: 4,
+          total_humans: 4,
+          total_bots: 0,
+          total_edges: edges.length,
+          total_messages: messages.length,
+        },
+        created_at: new Date(),
+        version: '2.0',
+      };
+      
+      networkCalculator = new MetricsCalculator(networkGraph);
+    });
+    
+    it('should calculate L1.5 Leadership Distance', async () => {
+      const { L1_5_LEADERSHIP_DISTANCE } = require('../src/layer4/core-metrics');
+      networkCalculator.registerMetric(L1_5_LEADERSHIP_DISTANCE);
+      
+      const result = await networkCalculator.calculateMetric('L1.5');
+      
+      expect(typeof result.value).toBe('number');
+      expect(result.value as number).toBeGreaterThanOrEqual(0);
+      expect(result.value as number).toBeLessThanOrEqual(100);
+    });
+    
+    it('should calculate L1.6 Silo Index', async () => {
+      const { L1_6_SILO_INDEX } = require('../src/layer4/core-metrics');
+      networkCalculator.registerMetric(L1_6_SILO_INDEX);
+      
+      const result = await networkCalculator.calculateMetric('L1.6');
+      
+      expect(typeof result.value).toBe('number');
+      expect(result.value as number).toBeGreaterThanOrEqual(0);
+      expect(result.value as number).toBeLessThanOrEqual(100);
+    });
+    
+    it('should calculate L1.7 Burnout Risk', async () => {
+      const { L1_7_BURNOUT_RISK } = require('../src/layer4/core-metrics');
+      networkCalculator.registerMetric(L1_7_BURNOUT_RISK);
+      
+      const result = await networkCalculator.calculateMetric('L1.7');
+      
+      expect(typeof result.value).toBe('number');
+      expect(result.value as number).toBeGreaterThanOrEqual(0);
+    });
+  });
 });

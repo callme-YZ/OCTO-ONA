@@ -360,3 +360,170 @@ export const ENHANCED_METRICS: MetricDefinition[] = [
   // P1 Network
   L1_3_CLOSENESS_CENTRALITY,
 ];
+
+// ============================================
+// Additional P0 Network Metrics
+// ============================================
+
+export const L1_5_LEADERSHIP_DISTANCE: MetricDefinition = {
+  id: 'L1.5',
+  name: '领导层距离',
+  category: 'network',
+  priority: 'P0',
+  unit: 'percentage',
+  description: '2步内可达决策层的人员占比',
+  calculator: async (graph, engine) => {
+    // Define leadership nodes (simplified: use team='leadership' or high Hub Score)
+    const hubScores = engine.calculateHubScore();
+    const sortedByHS = Object.entries(hubScores)
+      .sort((a, b) => {
+        if (a[1] === Infinity && b[1] === Infinity) return 0;
+        if (a[1] === Infinity) return -1;
+        if (b[1] === Infinity) return 1;
+        return b[1] - a[1];
+      });
+    
+    // Top 10% as leadership
+    const leadershipCount = Math.max(1, Math.floor(sortedByHS.length * 0.1));
+    const leadershipNodes = new Set(
+      sortedByHS.slice(0, leadershipCount).map(([id]) => id)
+    );
+    
+    // Get human nodes
+    const humanNodes = graph.human_nodes.map(h => h.id);
+    const nonLeadership = humanNodes.filter(id => !leadershipNodes.has(id));
+    
+    if (nonLeadership.length === 0) return 100; // All are leaders
+    
+    // Check 2-hop reachability using graphology
+    const g = engine['getGraph'](); // Access private method
+    let reachableCount = 0;
+    
+    for (const nodeId of nonLeadership) {
+      let isReachable = false;
+      
+      // Check 1-hop
+      try {
+        g.forEachNeighbor(nodeId, (neighbor: string) => {
+          if (leadershipNodes.has(neighbor)) {
+            isReachable = true;
+          }
+        });
+      } catch (e) {
+        // Node not in graph
+        continue;
+      }
+      
+      // Check 2-hop
+      if (!isReachable) {
+        try {
+          g.forEachNeighbor(nodeId, (neighbor1: string) => {
+            g.forEachNeighbor(neighbor1, (neighbor2: string) => {
+              if (leadershipNodes.has(neighbor2)) {
+                isReachable = true;
+              }
+            });
+          });
+        } catch (e) {
+          // Ignore
+        }
+      }
+      
+      if (isReachable) reachableCount++;
+    }
+    
+    return (reachableCount / nonLeadership.length) * 100;
+  },
+};
+
+export const L1_6_SILO_INDEX: MetricDefinition = {
+  id: 'L1.6',
+  name: '孤岛指数',
+  category: 'network',
+  priority: 'P0',
+  unit: 'percentage',
+  description: '弱连接团队占比（跨团队边数<平均*0.5）',
+  calculator: async (graph, engine) => {
+    // Extract teams from human nodes
+    const teams = new Set<string>();
+    const nodeTeam = new Map<string, string>();
+    
+    for (const node of graph.human_nodes) {
+      const team = (node as any).team || 'default';
+      teams.add(team);
+      nodeTeam.set(node.id, team);
+    }
+    
+    if (teams.size <= 1) return 0; // No silos if only one team
+    
+    // Count cross-team edges per team
+    const teamCrossEdges = new Map<string, number>();
+    for (const team of teams) {
+      teamCrossEdges.set(team, 0);
+    }
+    
+    for (const edge of graph.edges) {
+      const sourceTeam = nodeTeam.get(edge.source);
+      const targetTeam = nodeTeam.get(edge.target);
+      
+      if (sourceTeam && targetTeam && sourceTeam !== targetTeam) {
+        teamCrossEdges.set(sourceTeam, (teamCrossEdges.get(sourceTeam) || 0) + 1);
+        teamCrossEdges.set(targetTeam, (teamCrossEdges.get(targetTeam) || 0) + 1);
+      }
+    }
+    
+    // Calculate average
+    const counts = Array.from(teamCrossEdges.values());
+    const avg = counts.reduce((a, b) => a + b, 0) / counts.length;
+    
+    // Weak teams: cross-edges < avg * 0.5
+    const weakTeams = counts.filter(c => c < avg * 0.5).length;
+    
+    return (weakTeams / teams.size) * 100;
+  },
+};
+
+export const L1_7_BURNOUT_RISK: MetricDefinition = {
+  id: 'L1.7',
+  name: '过载风险',
+  category: 'network',
+  priority: 'P0',
+  unit: 'count',
+  description: '中介中心性>0.3的节点数（过载风险人员）',
+  calculator: async (graph, engine) => {
+    const centrality = await engine.computeCentrality();
+    
+    const atRisk = Object.values(centrality.betweenness).filter(
+      bc => bc > 0.3
+    ).length;
+    
+    return atRisk;
+  },
+};
+
+// ============================================
+// Update CORE_METRICS to include new P0
+// ============================================
+
+export const ALL_CORE_METRICS: MetricDefinition[] = [
+  // Network (6 P0)
+  L1_1_DEGREE_CENTRALITY,
+  L1_2_BETWEENNESS_CENTRALITY,
+  L1_4_NETWORK_DENSITY,
+  L1_5_LEADERSHIP_DISTANCE,
+  L1_6_SILO_INDEX,
+  L1_7_BURNOUT_RISK,
+  
+  // Collaboration (2 P0)
+  L2_1_BOT_FUNCTIONAL_TAGS,
+  L2_2_H2B_COLLABORATION_RATIO,
+  
+  // Connoisseurship (4 P0)
+  L3_1_CONNOISSEURSHIP_FREQUENCY,
+  L3_2_CONNOISSEURSHIP_REACH,
+  L3_3_CONNOISSEURSHIP_CONVERSION,
+  L3_5_HUB_SCORE,
+  
+  // Bot Tags (1 P0)
+  T5_HIGH_ACTIVITY,
+];
