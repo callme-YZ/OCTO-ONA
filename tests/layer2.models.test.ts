@@ -30,7 +30,7 @@ describe('Layer 2: Data Models', () => {
     it('should create a valid human node', () => {
       const node: HumanNode = {
         id: 'user_001',
-        name: '黄楠',
+        name: 'Alice',
         role: 'Product Owner',
         team: '产品',
         type: 'human',
@@ -43,7 +43,7 @@ describe('Layer 2: Data Models', () => {
     it('should reject invalid email', () => {
       const node = {
         id: 'user_001',
-        name: '黄楠',
+        name: 'Alice',
         email: 'invalid-email',
         type: 'human',
       };
@@ -208,7 +208,7 @@ describe('Layer 2: Data Models', () => {
         start_time: new Date('2026-03-01'),
         end_time: new Date('2026-03-18'),
         human_nodes: [
-          { id: 'user_001', name: '黄楠', type: 'human' },
+          { id: 'user_001', name: 'Alice', type: 'human' },
         ],
         ai_agent_nodes: [
           { id: 'wuyun_bot', bot_name: '无云', type: 'ai_agent', capabilities: [], functional_tags: [] },

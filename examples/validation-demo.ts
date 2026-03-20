@@ -9,7 +9,7 @@ import { DataValidator } from '../src/layer1/validator';
 
 async function main() {
   const config = {
-    host: 'im-test.xming.ai',
+    host: 'example.com',
     port: 13306,
     user: 'dmwork_ro',
     password: 'dmwork_ro',

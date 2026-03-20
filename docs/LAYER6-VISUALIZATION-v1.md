@@ -615,11 +615,11 @@ app.get('/api/v1/insights', async (req: Request, res: Response) => {
 app.get('/api/v1/network/graph', async (req: Request, res: Response) => {
   const networkData: NetworkData = {
     nodes: [
-      { name: '黄楠', value: 0.60, category: 'human' },
+      { name: 'Alice', value: 0.60, category: 'human' },
       { name: '无云', value: 0.40, category: 'bot' }
     ],
     links: [
-      { source: '黄楠', target: '无云', value: 156 }
+      { source: 'Alice', target: '无云', value: 156 }
     ]
   };
   
@@ -703,11 +703,11 @@ async function main() {
     ],
     networkData: {
       nodes: [
-        { name: '黄楠', value: 0.60, category: 'human' },
+        { name: 'Alice', value: 0.60, category: 'human' },
         { name: '无云', value: 0.40, category: 'bot' }
       ],
       links: [
-        { source: '黄楠', target: '无云', value: 156 }
+        { source: 'Alice', target: '无云', value: 156 }
       ]
     }
   };

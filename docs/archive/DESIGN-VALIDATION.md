@@ -6,15 +6,15 @@
 
 ---
 
-## 案例1: 辉哥 Dashboard（2026-03-19上午）
+## 案例1: Bob Dashboard（2026-03-19上午）
 
 ### 任务描述
-分析辉哥的3个Bot（radar_bot, pythagoras_bot, pentland_bot）的网络表现，生成Dashboard。
+分析Bob的3个Bot（radar_bot, pythagoras_bot, pentland_bot）的网络表现，生成Dashboard。
 
 ### 使用的数据和方法
 - **数据源**: DMWork数据库（5张message表）
 - **核心分析**: 
-  - 辉哥二层网络（113节点，405边）
+  - Bob二层网络（113节点，405边）
   - Top 10通信伙伴
   - 每个Bot的二层网络
   - 每个Bot的频道参与
@@ -27,8 +27,8 @@
 
 **实际操作**:
 ```python
-# 查询辉哥的Bot
-SELECT uid, name FROM robot WHERE creator_uid = '辉哥UID'
+# 查询Bob的Bot
+SELECT uid, name FROM robot WHERE creator_uid = 'BobUID'
 
 # 从5张message表提取消息
 SELECT * FROM message WHERE from_uid IN (bot_uids) OR ...
@@ -57,7 +57,7 @@ def get_friend_list(self, uid: str) -> List[str]:
 
 **实际数据**:
 - radar_bot: 1,301条消息，133节点网络
-- 辉哥: 4,799条消息（全量数据）
+- Bob: 4,799条消息（全量数据）
 
 **验证**:
 - ✅ Message模型的`from_uid → to_uids`结构正确
@@ -103,7 +103,7 @@ def get_friend_list(self, uid: str) -> List[str]:
 #### ✅ **Layer 5: 洞察引擎 - 未使用**
 
 **实际情况**: 
-- 辉哥Dashboard是定制化分析，未使用自动洞察
+- BobDashboard是定制化分析，未使用自动洞察
 
 **验证**: 无法验证
 
@@ -157,7 +157,7 @@ class BaseAdapter:
 #### 发现2: UID映射需要持续维护
 
 **问题**:
-- 辉哥UID、嘉伟UID等需要提前映射
+- BobUID、CharlieUID等需要提前映射
 - 映射错误会导致数据缺失
 
 **教训**:
@@ -410,8 +410,8 @@ DiagnosticRule(
 #### 发现3: 品鉴识别不是单纯关键词匹配
 
 **问题**:
-- 实际品鉴：嘉伟0发言405被提及（纯被动品鉴）
-- 刘乐君主动品鉴："这个UI有问题"
+- 实际品鉴：Charlie0发言405被提及（纯被动品鉴）
+- David主动品鉴："这个UI有问题"
 - 现有规则式算法只能识别主动品鉴
 
 **教训**:

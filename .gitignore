@@ -29,3 +29,19 @@ npm-debug.log*
 examples/*.pdf
 examples/*.xlsx
 examples/*.png
+
+# Sensitive configuration files
+octo-ona.config.json
+.env
+.env.local
+.env.*.local
+
+# User data and outputs
+output/
+*.local.json
+real-*.json
+real-*.csv
+
+# Test data with real information
+tests/fixtures/real-*
+examples/real-*

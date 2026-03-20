@@ -9,7 +9,7 @@ import { AnalysisEngine } from '../src/layer3/analysis-engine';
 
 async function main() {
   const config = {
-    host: 'im-test.xming.ai',
+    host: 'example.com',
     port: 13306,
     user: 'dmwork_ro',
     password: 'dmwork_ro',
@@ -28,9 +28,9 @@ async function main() {
       startTime: new Date('2026-03-01'),
       endTime: new Date('2026-03-18'),
       uidWhitelist: [
-        '71e2a58ecce04aba972ce73c72b89f64',
-        'eca0702f83e048c7b6151b21b1a3b9de',
-        'f6f40587f02e46be928ceaf4d8e9fe76',
+        'user1_xxxxxxxxxxxxxxxxxxxxxxxx',
+        'user2_xxxxxxxxxxxxxxxxxxxxxxxx',
+        'user3_xxxxxxxxxxxxxxxxxxxxxxxx',
       ],
       graphId: 'analysis_demo',
     });

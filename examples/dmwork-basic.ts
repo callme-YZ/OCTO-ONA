@@ -10,7 +10,7 @@ import fs from 'fs/promises';
 async function main() {
   // Configuration
   const config = {
-    host: 'im-test.xming.ai',
+    host: 'example.com',
     port: 13306,
     user: 'dmwork_ro',
     password: 'dmwork_ro',

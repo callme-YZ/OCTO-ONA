@@ -8,7 +8,7 @@ import { DMWorkAdapter } from '../src/layer1/dmwork-adapter';
 
 async function main() {
   const config = {
-    host: 'im-test.xming.ai',
+    host: 'example.com',
     port: 13306,
     user: 'dmwork_ro',
     password: 'dmwork_ro',
@@ -60,13 +60,13 @@ async function main() {
       startTime: new Date('2026-03-01'),
       endTime: new Date('2026-03-18'),
       uidWhitelist: [
-        '71e2a58ecce04aba972ce73c72b89f64',
-        'eca0702f83e048c7b6151b21b1a3b9de',
-        'f6f40587f02e46be928ceaf4d8e9fe76',
-        '6dcd04a8cfe74a58913540fe1a43d1e6',
-        '42e8f35d56f04f26ba993dcff9775d05',
-        '15da065b2f044f5a87f74dac7f450d51',
-        'b13fed7db57540089ac95eaef64c9cf5',
+        'user1_xxxxxxxxxxxxxxxxxxxxxxxx',
+        'user2_xxxxxxxxxxxxxxxxxxxxxxxx',
+        'user3_xxxxxxxxxxxxxxxxxxxxxxxx',
+        'user4_xxxxxxxxxxxxxxxxxxxxxxxx',
+        'user5_xxxxxxxxxxxxxxxxxxxxxxxx',
+        'user6_xxxxxxxxxxxxxxxxxxxxxxxx',
+        'user7_xxxxxxxxxxxxxxxxxxxxxxxx',
       ],
       graphId: 'performance_test_filtered',
     });

@@ -157,10 +157,10 @@ describe('Layer 3: AnalysisEngine', () => {
       // Create network with known Hub Scores
       // Simple test data with clear Hub Scores
       const humans: HumanNode[] = [
-        { id: 'authority', name: '嘉伟', type: 'human' }, // HS = ∞ (0 sent, 5 received)
-        { id: 'strategist', name: '辉哥', type: 'human' }, // HS = 2.0 (2 sent, 4 received)
-        { id: 'manager', name: '黄楠', type: 'human' }, // HS = 0.5 (10 sent, 5 received)
-        { id: 'executor', name: '刘乐君', type: 'human' }, // HS = 0.1 (10 sent, 1 received)
+        { id: 'authority', name: 'Charlie', type: 'human' }, // HS = ∞ (0 sent, 5 received)
+        { id: 'strategist', name: 'Bob', type: 'human' }, // HS = 2.0 (2 sent, 4 received)
+        { id: 'manager', name: 'Alice', type: 'human' }, // HS = 0.5 (10 sent, 5 received)
+        { id: 'executor', name: 'David', type: 'human' }, // HS = 0.1 (10 sent, 1 received)
       ];
       
       const bots: AIAgentNode[] = [];
@@ -168,17 +168,17 @@ describe('Layer 3: AnalysisEngine', () => {
       
       const messages: Message[] = [
         // authority: 0 sent, 5 received → HS = ∞
-        { id: 'm1', from_uid: 'strategist', to_uids: ['authority'], content: '@嘉伟', timestamp: new Date() },
-        { id: 'm2', from_uid: 'strategist', to_uids: ['authority'], content: '@嘉伟', timestamp: new Date() },
-        { id: 'm3', from_uid: 'manager', to_uids: ['authority'], content: '@嘉伟', timestamp: new Date() },
-        { id: 'm4', from_uid: 'manager', to_uids: ['authority'], content: '@嘉伟', timestamp: new Date() },
-        { id: 'm5', from_uid: 'manager', to_uids: ['authority'], content: '@嘉伟', timestamp: new Date() },
+        { id: 'm1', from_uid: 'strategist', to_uids: ['authority'], content: '@Charlie', timestamp: new Date() },
+        { id: 'm2', from_uid: 'strategist', to_uids: ['authority'], content: '@Charlie', timestamp: new Date() },
+        { id: 'm3', from_uid: 'manager', to_uids: ['authority'], content: '@Charlie', timestamp: new Date() },
+        { id: 'm4', from_uid: 'manager', to_uids: ['authority'], content: '@Charlie', timestamp: new Date() },
+        { id: 'm5', from_uid: 'manager', to_uids: ['authority'], content: '@Charlie', timestamp: new Date() },
         
         // strategist: 2 sent (m1, m2), 4 received (m6-m9) → HS = 2.0
-        { id: 'm6', from_uid: 'manager', to_uids: ['strategist'], content: '@辉哥', timestamp: new Date() },
-        { id: 'm7', from_uid: 'manager', to_uids: ['strategist'], content: '@辉哥', timestamp: new Date() },
-        { id: 'm8', from_uid: 'executor', to_uids: ['strategist'], content: '@辉哥', timestamp: new Date() },
-        { id: 'm9', from_uid: 'executor', to_uids: ['strategist'], content: '@辉哥', timestamp: new Date() },
+        { id: 'm6', from_uid: 'manager', to_uids: ['strategist'], content: '@Bob', timestamp: new Date() },
+        { id: 'm7', from_uid: 'manager', to_uids: ['strategist'], content: '@Bob', timestamp: new Date() },
+        { id: 'm8', from_uid: 'executor', to_uids: ['strategist'], content: '@Bob', timestamp: new Date() },
+        { id: 'm9', from_uid: 'executor', to_uids: ['strategist'], content: '@Bob', timestamp: new Date() },
         
         // manager: 10 sent (m3-m5, m6-m7, m10-m14), 5 received (m15-m19) → HS = 0.5
         { id: 'm10', from_uid: 'manager', to_uids: ['executor'], content: '工作', timestamp: new Date() },
@@ -186,11 +186,11 @@ describe('Layer 3: AnalysisEngine', () => {
         { id: 'm12', from_uid: 'manager', to_uids: ['executor'], content: '工作', timestamp: new Date() },
         { id: 'm13', from_uid: 'manager', to_uids: ['executor'], content: '工作', timestamp: new Date() },
         { id: 'm14', from_uid: 'manager', to_uids: ['executor'], content: '工作', timestamp: new Date() },
-        { id: 'm15', from_uid: 'executor', to_uids: ['manager'], content: '@黄楠', timestamp: new Date() },
-        { id: 'm16', from_uid: 'executor', to_uids: ['manager'], content: '@黄楠', timestamp: new Date() },
-        { id: 'm17', from_uid: 'executor', to_uids: ['manager'], content: '@黄楠', timestamp: new Date() },
-        { id: 'm18', from_uid: 'executor', to_uids: ['manager'], content: '@黄楠', timestamp: new Date() },
-        { id: 'm19', from_uid: 'executor', to_uids: ['manager'], content: '@黄楠', timestamp: new Date() },
+        { id: 'm15', from_uid: 'executor', to_uids: ['manager'], content: '@Alice', timestamp: new Date() },
+        { id: 'm16', from_uid: 'executor', to_uids: ['manager'], content: '@Alice', timestamp: new Date() },
+        { id: 'm17', from_uid: 'executor', to_uids: ['manager'], content: '@Alice', timestamp: new Date() },
+        { id: 'm18', from_uid: 'executor', to_uids: ['manager'], content: '@Alice', timestamp: new Date() },
+        { id: 'm19', from_uid: 'executor', to_uids: ['manager'], content: '@Alice', timestamp: new Date() },
         
         // executor: 10 sent (m8-m9, m15-m19, m20-m22), 1 received (m10) → HS = 0.1
         { id: 'm20', from_uid: 'executor', to_uids: ['manager'], content: '报告', timestamp: new Date() },
@@ -291,7 +291,7 @@ describe('Layer 3: AnalysisEngine', () => {
     
     beforeEach(() => {
       const humans: HumanNode[] = [
-        { id: 'user1', name: '刘乐君', type: 'human' },
+        { id: 'user1', name: 'David', type: 'human' },
         { id: 'user2', name: 'User2', type: 'human' },
       ];
       

@@ -46,7 +46,7 @@ import mysql from 'mysql2/promise';
 import { z } from 'zod';
 
 const pool = mysql.createPool({
-  host: 'im-test.xming.ai',
+  host: 'example.com',
   port: 13306,
   user: 'dmwork_ro',
   database: 'im',
@@ -208,7 +208,7 @@ describe('Hub Score Calculation', () => {
     const engine = new AnalysisEngine(networkGraph);
     const hubScores = engine.calculateHubScore();
     
-    expect(hubScores['嘉伟UID']).toBe(Infinity); // 405被@, 0发送
+    expect(hubScores['CharlieUID']).toBe(Infinity); // 405被@, 0发送
   });
 });
 ```

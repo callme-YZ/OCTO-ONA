@@ -100,8 +100,8 @@ export type HumanNode = z.infer<typeof HumanNodeSchema>;
 
 // 示例数据
 const exampleHumanNode: HumanNode = {
-  id: "71e2a58ecce04aba972ce73c72b89f64",
-  name: "黄楠",
+  id: "user1_xxxxxxxxxxxxxxxxxxxxxxxx",
+  name: "Alice",
   role: "Product Owner",
   team: "产品",
   email: "huangnan@example.com",
@@ -147,7 +147,7 @@ export type AIAgentNode = z.infer<typeof AIAgentNodeSchema>;
 const exampleAIAgentNode: AIAgentNode = {
   id: "wuyun_bot",
   bot_name: "无云",
-  creator_uid: "eca0702f83e048c7b6151b21b1a3b9de",
+  creator_uid: "user2_xxxxxxxxxxxxxxxxxxxxxxxx",
   capabilities: ["code_review", "testing"],
   functional_tags: ["跨团队连接", "信息聚合", "高活跃"],
   avg_response_time: 8.5,
@@ -191,7 +191,7 @@ export type Edge = z.infer<typeof EdgeSchema>;
 
 // 示例数据
 const exampleEdge: Edge = {
-  source: "71e2a58ecce04aba972ce73c72b89f64",
+  source: "user1_xxxxxxxxxxxxxxxxxxxxxxxx",
   target: "wuyun_bot",
   edge_type: "H2B",
   weight: 156,
@@ -606,7 +606,7 @@ CREATE TABLE messages (
 // 创建人类节点
 CREATE (h:Human {
     id: '71e2a58e...',
-    name: '黄楠',
+    name: 'Alice',
     role: 'Product Owner',
     team: '产品'
 })
@@ -727,14 +727,14 @@ const network: NetworkGraph = {
   human_nodes: [
     {
       id: "71e2a58e...",
-      name: "黄楠",
+      name: "Alice",
       role: "Product Owner",
       team: "产品",
       type: "human"
     },
     {
       id: "f6f40587...",
-      name: "嘉伟",
+      name: "Charlie",
       role: "Tech Lead",
       team: "研发",
       type: "human"

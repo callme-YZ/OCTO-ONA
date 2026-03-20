@@ -572,11 +572,11 @@ class InsightReport(BaseModel):
 
 **证据**:
 - Burnout Risk: 42.9%
-- 过载人员: 嘉伟(BC=0.45), 黄楠(BC=0.38), 梦林(BC=0.32)
+- 过载人员: Charlie(BC=0.45), Alice(BC=0.38), 梦林(BC=0.32)
 
 **建议**:
 1. 分散职责：将过载人员的桥梁职责分散到其他人或Bot
-2. 部署代理Bot：为嘉伟、黄楠部署人类代理Bot分担任务
+2. 部署代理Bot：为Charlie、Alice部署人类代理Bot分担任务
 3. 优化流程：减少不必要的协调环节
 
 ---
@@ -605,7 +605,7 @@ class InsightReport(BaseModel):
 
 ## 💡 行动清单（Top 5）
 
-1. **[紧急]** 为嘉伟、黄楠部署人类代理Bot（解决过载）
+1. **[紧急]** 为Charlie、Alice部署人类代理Bot（解决过载）
 2. **[紧急]** 建立品鉴→Issue自动化流程（提升转化率）
 3. **[重要]** 在产品-研发团队间部署跨团队连接Bot（解决孤岛）
 4. **[重要]** 下线3个边缘Bot：aoli_bot, 花花, JOJO（资源优化）

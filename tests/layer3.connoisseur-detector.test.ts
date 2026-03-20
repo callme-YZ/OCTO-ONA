@@ -74,7 +74,7 @@ describe('Layer 3: ConnoisseurDetector', () => {
     });
     
     it('should handle real Octo team examples', () => {
-      // 刘乐君 UI/UX评价
+      // David UI/UX评价
       const text1 = '排版有问题，UI不好看';
       expect(ConnoisseurDetector.isConnoisseurship(text1)).toBe(true);
       

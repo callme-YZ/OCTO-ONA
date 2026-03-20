@@ -6,10 +6,10 @@ import { NetworkGraph, HumanNode, AIAgentNode, Edge, Message } from '../src/laye
 
 // Create demo network
 const humans: HumanNode[] = [
-  { id: 'h1', name: '嘉伟', type: 'human', team: 'Product' },
-  { id: 'h2', name: '辉哥', type: 'human', team: 'Product' },
-  { id: 'h3', name: '黄楠', type: 'human', team: 'Engineering' },
-  { id: 'h4', name: '刘乐君', type: 'human', team: 'Engineering' },
+  { id: 'h1', name: 'Charlie', type: 'human', team: 'Product' },
+  { id: 'h2', name: 'Bob', type: 'human', team: 'Product' },
+  { id: 'h3', name: 'Alice', type: 'human', team: 'Engineering' },
+  { id: 'h4', name: 'David', type: 'human', team: 'Engineering' },
   { id: 'h5', name: 'Alice', type: 'human', team: 'Design' },
 ];
 
@@ -20,13 +20,13 @@ const bots: AIAgentNode[] = [
 ];
 
 const edges: Edge[] = [
-  // 嘉伟 (高Hub Score - 被@多，发送少)
+  // Charlie (高Hub Score - 被@多，发送少)
   { source: 'h2', target: 'h1', edge_type: 'H2H', weight: 15, is_cross_team: false, message_ids: Array(15).fill('m') },
   { source: 'h3', target: 'h1', edge_type: 'H2H', weight: 12, is_cross_team: true, message_ids: Array(12).fill('m') },
   { source: 'h4', target: 'h1', edge_type: 'H2H', weight: 8, is_cross_team: true, message_ids: Array(8).fill('m') },
   { source: 'h1', target: 'h2', edge_type: 'H2H', weight: 3, is_cross_team: false, message_ids: Array(3).fill('m') },
   
-  // 辉哥 (中Hub Score)
+  // Bob (中Hub Score)
   { source: 'h3', target: 'h2', edge_type: 'H2H', weight: 10, is_cross_team: true, message_ids: Array(10).fill('m') },
   { source: 'h4', target: 'h2', edge_type: 'H2H', weight: 6, is_cross_team: true, message_ids: Array(6).fill('m') },
   { source: 'h2', target: 'h3', edge_type: 'H2H', weight: 8, is_cross_team: true, message_ids: Array(8).fill('m') },

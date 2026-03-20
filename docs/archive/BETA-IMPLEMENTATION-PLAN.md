@@ -106,10 +106,10 @@ octo-ona/
 - 处理∞和0/0情况
 
 **测试标准**（关键）:
-- ✅ 嘉伟UID = ∞（405被@, 0发送）
-- ✅ 辉哥UID ≈ 4.0（1187被@, 299发送）
-- ✅ 黄楠UID ≈ 0.3（239被@, 900发送）
-- ✅ 刘乐君UID < 0.05（97被@, 5270发送）
+- ✅ CharlieUID = ∞（405被@, 0发送）
+- ✅ BobUID ≈ 4.0（1187被@, 299发送）
+- ✅ AliceUID ≈ 0.3（239被@, 900发送）
+- ✅ DavidUID < 0.05（97被@, 5270发送）
 
 #### Step 2.3: 品鉴识别（规则式）
 - 4维度关键词匹配、上下文验证
@@ -122,7 +122,7 @@ octo-ona/
 - Degree/Betweenness/Closeness Centrality
 
 ### Phase 2 验收标准
-- ✅ Hub Score计算正确（嘉伟=∞，辉哥≈4.0）
+- ✅ Hub Score计算正确（Charlie=∞，Bob≈4.0）
 - ✅ 品鉴识别有效
 - ✅ 输出analysis-results.json
 
@@ -142,7 +142,7 @@ octo-ona/
 - L3.1品鉴频率、L3.2影响广度、L3.3执行转化、L3.5 Hub Score
 
 **测试标准**:
-- ✅ L3.1: 刘乐君品鉴频率 > 30%
+- ✅ L3.1: David品鉴频率 > 30%
 - ✅ L3.5: Hub Score值正确
 
 #### Step 3.3: 网络指标（L1.1, L1.2, L1.4）
@@ -187,7 +187,7 @@ octo-ona/
 ### Phase 4 验收标准
 - ✅ octo-ona-beta-dashboard.html生成成功（<500KB）
 - ✅ 5个图表全部可见
-- ✅ 品鉴金字塔清晰（嘉伟L4, 辉哥L5, 黄楠L2, 刘乐君L1）
+- ✅ 品鉴金字塔清晰（CharlieL4, BobL5, AliceL2, DavidL1）
 
 ---
 
@@ -228,7 +228,7 @@ octo-ona/
 
 ### 核心功能验收（必须100%通过）
 - ✅ 数据提取: 15节点，33,770消息（Octo）
-- ✅ Hub Score: 嘉伟=∞, 辉哥≈4.0, 黄楠≈0.3, 刘乐君≈0.0
+- ✅ Hub Score: Charlie=∞, Bob≈4.0, Alice≈0.3, David≈0.0
 - ✅ 可视化: 单页Dashboard，5个图表，品鉴金字塔5层
 
 ### 质量验收
@@ -255,8 +255,8 @@ open octo-ona-beta-dashboard.html
 
 验证清单:
 - ✅ Hub Score图表显示5层金字塔
-- ✅ 嘉伟在L4（HS=∞）、辉哥在L5（HS=4.0）
-- ✅ 黄楠在L2（HS=0.3）、刘乐君在L1（HS=0.0）
+- ✅ Charlie在L4（HS=∞）、Bob在L5（HS=4.0）
+- ✅ Alice在L2（HS=0.3）、David在L1（HS=0.0）
 - ✅ 网络图显示15节点
 - ✅ Bot标签分布合理
 

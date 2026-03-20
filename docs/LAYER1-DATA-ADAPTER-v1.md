@@ -346,7 +346,7 @@ class DMWorkAdapter extends BaseAdapter {
      * 初始化DMWork适配器
      * 
      * @param config - {
-     *   host: 'im-test.xming.ai',
+     *   host: 'example.com',
      *   port: 13306,
      *   user: 'dmwork_ro',
      *   password: '...',
@@ -487,7 +487,7 @@ export { DMWorkAdapter };
 ```typescript
 // 配置
 const config = {
-  host: 'im-test.xming.ai',
+  host: 'example.com',
   port: 13306,
   user: 'dmwork_ro',
   password: 'your_password',

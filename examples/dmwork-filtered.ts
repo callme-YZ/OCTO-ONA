@@ -9,7 +9,7 @@ import fs from 'fs/promises';
 
 async function main() {
   const config = {
-    host: 'im-test.xming.ai',
+    host: 'example.com',
     port: 13306,
     user: 'dmwork_ro',
     password: 'dmwork_ro',
@@ -19,9 +19,9 @@ async function main() {
   
   // OCTO team core members (example)
   const octoUids = [
-    '71e2a58ecce04aba972ce73c72b89f64', // 黄楠
-    'eca0702f83e048c7b6151b21b1a3b9de', // 辉哥
-    'f6f40587f02e46be928ceaf4d8e9fe76', // 嘉伟
+    'user1_xxxxxxxxxxxxxxxxxxxxxxxx', // Alice
+    'user2_xxxxxxxxxxxxxxxxxxxxxxxx', // Bob
+    'user3_xxxxxxxxxxxxxxxxxxxxxxxx', // Charlie
     // ... add more UIDs
   ];
   
