@@ -136,11 +136,58 @@ export const L3_3_CONNOISSEURSHIP_CONVERSION: MetricDefinition = {
   category: 'connoisseurship',
   priority: 'P0',
   unit: 'ratio',
-  description: '品鉴后有执行动作的比例',
+  description: '品鉴后有Bot响应的比例 (30分钟内)',
   calculator: async (graph, engine) => {
-    // TODO: Implement conversion tracking
-    // For now, return placeholder
-    return 0.0;
+    if (!graph.messages) return {};
+    
+    const connoisseurshipMsgIds = engine.detectConnoisseurshipMessages();
+    const connoisseurshipMsgs = graph.messages.filter(m => 
+      connoisseurshipMsgIds.includes(m.id)
+    );
+    
+    // Get bot IDs
+    const botIds = new Set(graph.ai_agent_nodes.map(b => b.id));
+    
+    // Calculate conversion per user
+    const conversions: Record<string, number> = {};
+    
+    // Group connoisseurship messages by user
+    const msgsByUser = new Map<string, typeof connoisseurshipMsgs>();
+    for (const msg of connoisseurshipMsgs) {
+      if (!msgsByUser.has(msg.from_uid)) {
+        msgsByUser.set(msg.from_uid, []);
+      }
+      msgsByUser.get(msg.from_uid)!.push(msg);
+    }
+    
+    // Check each user's conversion
+    for (const [userId, userMsgs] of msgsByUser.entries()) {
+      let executedCount = 0;
+      
+      for (const cMsg of userMsgs) {
+        // Check if Bot responded within 30 minutes
+        const window30min = new Date(cMsg.timestamp.getTime() + 30 * 60 * 1000);
+        
+        const botResponded = graph.messages.some(msg => {
+          return (
+            botIds.has(msg.from_uid) &&
+            msg.timestamp > cMsg.timestamp &&
+            msg.timestamp <= window30min &&
+            msg.to_uids.includes(userId) // Bot replied to the user
+          );
+        });
+        
+        if (botResponded) {
+          executedCount++;
+        }
+      }
+      
+      conversions[userId] = userMsgs.length > 0 
+        ? executedCount / userMsgs.length 
+        : 0.0;
+    }
+    
+    return conversions;
   },
 };
 
@@ -220,4 +267,96 @@ export const CORE_METRICS: MetricDefinition[] = [
   
   // Bot Tags (1)
   T5_HIGH_ACTIVITY,
+];
+
+// ============================================
+// L3: Connoisseurship Metrics (P1: L3.4)
+// ============================================
+
+export const L3_4_CONNOISSEURSHIP_AMPLIFICATION: MetricDefinition = {
+  id: 'L3.4',
+  name: '品鉴网络放大',
+  category: 'connoisseurship',
+  priority: 'P1',
+  unit: 'ratio',
+  description: '品鉴消息被其他人转述的次数比例',
+  calculator: async (graph, engine) => {
+    if (!graph.messages) return {};
+    
+    const connoisseurshipMsgIds = engine.detectConnoisseurshipMessages();
+    const connoisseurshipMsgs = graph.messages.filter(m => 
+      connoisseurshipMsgIds.includes(m.id)
+    );
+    
+    // Calculate amplification per user
+    const amplifications: Record<string, number> = {};
+    
+    // Group by user
+    const msgsByUser = new Map<string, typeof connoisseurshipMsgs>();
+    for (const msg of connoisseurshipMsgs) {
+      if (!msgsByUser.has(msg.from_uid)) {
+        msgsByUser.set(msg.from_uid, []);
+      }
+      msgsByUser.get(msg.from_uid)!.push(msg);
+    }
+    
+    // Get human nodes for name matching
+    const humanNodes = new Map(
+      graph.human_nodes.map(h => [h.id, h.name || h.id])
+    );
+    
+    for (const [userId, userMsgs] of msgsByUser.entries()) {
+      const userName = humanNodes.get(userId);
+      if (!userName) continue;
+      
+      let retellingCount = 0;
+      
+      // Check if user's name is mentioned in other messages
+      for (const msg of graph.messages) {
+        if (msg.from_uid === userId) continue; // Skip own messages
+        
+        // Simple retelling detection: message contains user's name
+        if (msg.content.includes(userName)) {
+          retellingCount++;
+        }
+      }
+      
+      amplifications[userId] = userMsgs.length > 0 
+        ? retellingCount / userMsgs.length 
+        : 0.0;
+    }
+    
+    return amplifications;
+  },
+};
+
+// ============================================
+// Additional P1 Network Metrics
+// ============================================
+
+export const L1_3_CLOSENESS_CENTRALITY: MetricDefinition = {
+  id: 'L1.3',
+  name: '接近中心性',
+  category: 'network',
+  priority: 'P1',
+  unit: 'score',
+  description: '节点到其他节点的平均距离',
+  calculator: async (graph, engine) => {
+    const centrality = await engine.computeCentrality();
+    return centrality.closeness;
+  },
+};
+
+// ============================================
+// Export Enhanced Metrics (P0 + P1)
+// ============================================
+
+export const ENHANCED_METRICS: MetricDefinition[] = [
+  ...CORE_METRICS,
+  
+  // P1 Connoisseurship
+  L3_4_CONNOISSEURSHIP_AMPLIFICATION,
+  
+  // P1 Network
+  L1_3_CLOSENESS_CENTRALITY,
 ];

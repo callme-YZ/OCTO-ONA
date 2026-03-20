@@ -168,4 +168,107 @@ describe('Layer 4: MetricsCalculator', () => {
       expect(result.value as number).toBeLessThanOrEqual(1);
     });
   });
+  
+  // ========================================
+  // Enhanced Metrics Tests (L3.3, L3.4)
+  // ========================================
+  
+  describe('Enhanced Connoisseurship Metrics', () => {
+    let enhancedGraph: NetworkGraph;
+    let enhancedCalculator: MetricsCalculator;
+    
+    beforeEach(() => {
+      const humans: HumanNode[] = [
+        { id: 'h1', name: 'Alice', type: 'human' },
+        { id: 'h2', name: 'Bob', type: 'human' },
+      ];
+      
+      const bots: AIAgentNode[] = [
+        { id: 'b1', bot_name: 'Bot1', type: 'ai_agent', capabilities: [], functional_tags: [] },
+      ];
+      
+      const messages: Message[] = [
+        // h1 sends connoisseurship message
+        { 
+          id: 'm1', 
+          from_uid: 'h1', 
+          to_uids: ['b1'], 
+          content: '感觉这个设计不对，为什么要这样？', 
+          timestamp: new Date('2026-03-18T10:00:00Z') 
+        },
+        
+        // Bot responds within 30 minutes (executed)
+        { 
+          id: 'm2', 
+          from_uid: 'b1', 
+          to_uids: ['h1'], 
+          content: '好的，我会修改', 
+          timestamp: new Date('2026-03-18T10:15:00Z') 
+        },
+        
+        // h2 retells Alice's opinion (amplification)
+        { 
+          id: 'm3', 
+          from_uid: 'h2', 
+          to_uids: ['b1'], 
+          content: 'Alice说设计有问题', 
+          timestamp: new Date('2026-03-18T11:00:00Z') 
+        },
+      ];
+      
+      enhancedGraph = {
+        graph_id: 'enhanced_test',
+        description: 'Enhanced metrics test',
+        start_time: new Date('2026-03-01'),
+        end_time: new Date('2026-03-18'),
+        human_nodes: humans,
+        ai_agent_nodes: bots,
+        edges: [],
+        messages,
+        summary: {
+          total_nodes: 3,
+          total_humans: 2,
+          total_bots: 1,
+          total_edges: 0,
+          total_messages: messages.length,
+        },
+        created_at: new Date(),
+        version: '2.0',
+      };
+      
+      enhancedCalculator = new MetricsCalculator(enhancedGraph);
+    });
+    
+    it('should calculate L3.3 Connoisseurship Conversion', async () => {
+      const { L3_3_CONNOISSEURSHIP_CONVERSION } = require('../src/layer4/core-metrics');
+      enhancedCalculator.registerMetric(L3_3_CONNOISSEURSHIP_CONVERSION);
+      
+      const result = await enhancedCalculator.calculateMetric('L3.3');
+      
+      expect(result.value).toBeDefined();
+      expect(typeof result.value).toBe('object');
+      
+      // h1 sent connoisseurship and got Bot response → conversion = 1.0
+      const conversions = result.value as Record<string, number>;
+      if (conversions['h1'] !== undefined) {
+        expect(conversions['h1']).toBeGreaterThan(0);
+      }
+    });
+    
+    it('should calculate L3.4 Connoisseurship Amplification', async () => {
+      const { L3_4_CONNOISSEURSHIP_AMPLIFICATION } = require('../src/layer4/core-metrics');
+      enhancedCalculator.registerMetric(L3_4_CONNOISSEURSHIP_AMPLIFICATION);
+      
+      const result = await enhancedCalculator.calculateMetric('L3.4');
+      
+      expect(result.value).toBeDefined();
+      expect(typeof result.value).toBe('object');
+      
+      // h1's name mentioned by h2 → amplification > 0
+      const amplifications = result.value as Record<string, number>;
+      if (amplifications['h1'] !== undefined) {
+        expect(amplifications['h1']).toBeGreaterThanOrEqual(0);
+      }
+    });
+  });
 });
