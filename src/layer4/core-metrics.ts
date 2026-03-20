@@ -59,14 +59,17 @@ export const L2_1_BOT_FUNCTIONAL_TAGS: MetricDefinition = {
   category: 'collaboration',
   priority: 'P0',
   unit: 'tags',
-  description: 'Bot的功能标签（T1-T8）',
+  description: 'Bot的功能标签（T1-T5）',
   calculator: async (graph, engine) => {
-    // TODO: Implement bot tagging logic
-    // For now, return placeholder
-    const tags: Record<string, string[]> = {};
+    const { BotTagger } = require('./bot-tagger');
+    const tagger = new BotTagger(graph, engine);
     
-    for (const bot of graph.ai_agent_nodes) {
-      tags[bot.id] = bot.functional_tags || [];
+    const results = await tagger.tagAllBots();
+    
+    // Convert to Record<botId, tags[]>
+    const tags: Record<string, string[]> = {};
+    for (const result of results) {
+      tags[result.botId] = result.tags;
     }
     
     return tags;

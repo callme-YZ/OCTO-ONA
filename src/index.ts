@@ -19,6 +19,7 @@ export * from './layer3/connoisseur-detector';
 // Layer 4: Metrics Calculator (Ready ✅)
 export * from './layer4/metrics-calculator';
 export * from './layer4/core-metrics';
+export * from './layer4/bot-tagger';
 
 // Layer 5: Insight Engine (Coming in Phase 4)
 // export * from './layer5/insight-engine';
@@ -26,5 +27,6 @@ export * from './layer4/core-metrics';
 // Layer 6: Visualization (Coming in Phase 5)
 // export * from './layer6/dashboard';
 
-console.log('OCTO-ONA v0.4.2 - Phase 3 Step 3 Complete ✅');
+console.log('OCTO-ONA v0.5.0 - Phase 3 Complete ✅');
 console.log('Total Metrics: 15 (13 P0 + 2 P1)');
+console.log('Bot Tags: T1-T5 implemented');
