@@ -27,6 +27,6 @@ export * from './layer6/dashboard-generator';
 // Layer 5: Insight Engine (Coming soon)
 // export * from './layer5/insight-engine';
 
-console.log('OCTO-ONA v0.8.0 - Phase 5 Step 1 Complete ✅');
-console.log('End-to-end pipeline + edge cases tested');
-console.log('88/88 tests passing (2 skipped: empty/single-node graphology limits)');
+console.log('OCTO-ONA v0.9.0 - Phase 5 Step 2 Complete ✅');
+console.log('Documentation: README.md (EN/CN), API.md (EN/CN), USER-GUIDE.md (EN/CN)');
+console.log('Total: 9,703 lines of documentation');
