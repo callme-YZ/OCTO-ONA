@@ -396,4 +396,77 @@ export class AnalysisEngine {
       .sort((a, b) => b[1] - a[1]) // Sort by frequency descending
       .slice(0, limit);
   }
+  
+  // ============================================
+  // Advanced Graph Algorithms
+  // ============================================
+  
+  /**
+   * Detect communities using Louvain algorithm
+   * 
+   * Communities are groups of nodes more densely connected internally
+   * than with the rest of the network.
+   * 
+   * @returns Record<nodeId, communityId>
+   */
+  detectCommunities(): Record<string, number> {
+    const louvain = require('graphology-communities-louvain');
+    const graph = this.getGraph();
+    
+    // Louvain requires undirected graph
+    const undirectedGraph = graph.copy();
+    undirectedGraph.setAttribute('type', 'undirected');
+    
+    const communities = louvain(undirectedGraph);
+    
+    const communityCount = new Set(Object.values(communities)).size;
+    console.log(`Detected ${communityCount} communities`);
+    
+    return communities;
+  }
+  
+  /**
+   * Get community summary
+   * 
+   * @returns Array of { communityId, members, size }
+   */
+  getCommunitySummary(): Array<{
+    communityId: number;
+    members: string[];
+    size: number;
+    humanCount: number;
+    botCount: number;
+  }> {
+    const communities = this.detectCommunities();
+    
+    // Group by community ID
+    const grouped = new Map<number, string[]>();
+    for (const [nodeId, communityId] of Object.entries(communities)) {
+      if (!grouped.has(communityId)) {
+        grouped.set(communityId, []);
+      }
+      grouped.get(communityId)!.push(nodeId);
+    }
+    
+    // Build summary
+    const summary = [];
+    for (const [communityId, members] of grouped.entries()) {
+      const humanCount = members.filter(id =>
+        this.networkGraph.human_nodes.some(n => n.id === id)
+      ).length;
+      const botCount = members.filter(id =>
+        this.networkGraph.ai_agent_nodes.some(n => n.id === id)
+      ).length;
+      
+      summary.push({
+        communityId,
+        members,
+        size: members.length,
+        humanCount,
+        botCount,
+      });
+    }
+    
+    return summary.sort((a, b) => b.size - a.size); // Sort by size descending
+  }
 }

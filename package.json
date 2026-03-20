@@ -21,6 +21,7 @@
   "dependencies": {
     "ejs": "^3.1.10",
     "graphology": "^0.25.4",
+    "graphology-communities-louvain": "^2.0.2",
     "graphology-metrics": "^2.3.0",
     "mysql2": "^3.11.5",
     "zod": "^3.23.8"

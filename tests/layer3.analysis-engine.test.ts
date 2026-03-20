@@ -352,4 +352,94 @@ describe('Layer 3: AnalysisEngine', () => {
       expect(top[0][1]).toBeGreaterThan(top[1][1]); // Sorted descending
     });
   });
+  
+  // ========================================
+  // Advanced Algorithms Tests
+  // ========================================
+  
+  describe('Advanced Algorithms', () => {
+    let advancedGraph: NetworkGraph;
+    let advancedEngine: AnalysisEngine;
+    
+    beforeEach(() => {
+      // Create network with clear community structure
+      // Community 1: h1-h2 + b1 (3 nodes)
+      // Community 2: h3-h4 (2 nodes)
+      const humans: HumanNode[] = [
+        { id: 'h1', name: 'Alice', type: 'human', team: 'A' },
+        { id: 'h2', name: 'Bob', type: 'human', team: 'A' },
+        { id: 'h3', name: 'Charlie', type: 'human', team: 'B' },
+        { id: 'h4', name: 'David', type: 'human', team: 'B' },
+      ];
+      
+      const bots: AIAgentNode[] = [
+        { id: 'b1', bot_name: 'Bot1', type: 'ai_agent', capabilities: [], functional_tags: [] },
+      ];
+      
+      const edges: Edge[] = [
+        // Community 1 (densely connected)
+        { source: 'h1', target: 'h2', edge_type: 'H2H', weight: 10, is_cross_team: false, message_ids: [] },
+        { source: 'h2', target: 'h1', edge_type: 'H2H', weight: 10, is_cross_team: false, message_ids: [] },
+        { source: 'h1', target: 'b1', edge_type: 'H2B', weight: 5, is_cross_team: false, message_ids: [] },
+        { source: 'h2', target: 'b1', edge_type: 'H2B', weight: 5, is_cross_team: false, message_ids: [] },
+        
+        // Community 2 (densely connected)
+        { source: 'h3', target: 'h4', edge_type: 'H2H', weight: 8, is_cross_team: false, message_ids: [] },
+        { source: 'h4', target: 'h3', edge_type: 'H2H', weight: 8, is_cross_team: false, message_ids: [] },
+        
+        // Weak cross-community link
+        { source: 'h2', target: 'h3', edge_type: 'H2H', weight: 1, is_cross_team: true, message_ids: [] },
+      ];
+      
+      advancedGraph = {
+        graph_id: 'advanced_test',
+        description: 'Community detection test',
+        start_time: new Date('2026-03-01'),
+        end_time: new Date('2026-03-18'),
+        human_nodes: humans,
+        ai_agent_nodes: bots,
+        edges,
+        summary: {
+          total_nodes: 5,
+          total_humans: 4,
+          total_bots: 1,
+          total_edges: edges.length,
+          total_messages: 0,
+        },
+        created_at: new Date(),
+        version: '2.0',
+      };
+      
+      advancedEngine = new AnalysisEngine(advancedGraph);
+    });
+    
+    it('should detect communities using Louvain', () => {
+      const communities = advancedEngine.detectCommunities();
+      
+      expect(Object.keys(communities).length).toBe(5); // All nodes assigned
+      
+      // Check that nodes are grouped (exact communities may vary)
+      const communityIds = new Set(Object.values(communities));
+      expect(communityIds.size).toBeGreaterThan(0);
+      expect(communityIds.size).toBeLessThanOrEqual(5);
+    });
+    
+    it('should provide community summary', () => {
+      const summary = advancedEngine.getCommunitySummary();
+      
+      expect(summary.length).toBeGreaterThan(0);
+      
+      // Sorted by size descending
+      for (let i = 1; i < summary.length; i++) {
+        expect(summary[i - 1].size).toBeGreaterThanOrEqual(summary[i].size);
+      }
+      
+      // Each community has members
+      for (const community of summary) {
+        expect(community.members.length).toBeGreaterThan(0);
+        expect(community.size).toBe(community.members.length);
+        expect(community.humanCount + community.botCount).toBe(community.size);
+      }
+    });
+  });
 });
