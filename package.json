@@ -1,12 +1,15 @@
 {
   "name": "octo-ona",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Organizational Network Analysis framework for Human-AI collaboration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-static",
+    "copy-static": "mkdir -p dist/web-ui/public && cp -r src/web-ui/public/* dist/web-ui/public/",
+    "start:ui": "npm run build && node dist/web-ui/start-server.js",
     "dev": "ts-node src/index.ts",
+    "dev:ui": "ts-node src/web-ui/start-server.ts",
     "test": "jest",
     "lint": "eslint src/**/*.ts"
   },

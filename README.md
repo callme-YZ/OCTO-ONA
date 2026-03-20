@@ -23,6 +23,23 @@
 
 ### Quick Start
 
+#### 🚀 Fastest Way to Get Started
+
+**Just want to see the UI?**
+
+```bash
+git clone https://github.com/callme-YZ/OCTO-ONA.git
+cd OCTO-ONA
+npm install
+npm run start:ui
+```
+
+Then open **http://localhost:3000** in your browser!
+
+- Click **🇬🇧 EN** or **🇨🇳 中文** to switch language
+- Follow the 4-step wizard to analyze your data
+
+
 #### Installation
 
 ```bash
@@ -63,22 +80,28 @@ open e2e-dashboard.html
 
 ### v1.1 Features (New!)
 
+- Network preview before analysis
 #### 🌐 Web Configuration UI
 
 Visual interface for non-technical users:
 
 ```bash
-# Start web UI server
-npx ts-node -e "import { ConfigServer } from './src/web-ui/config-server'; const server = new ConfigServer(); server.start(3000);"
+# Start Web UI (one command!)
+npm run start:ui
 
-# Open browser
-open http://localhost:3000
+# Or use development mode (auto-reload)
+npm run dev:ui
+
+# Then open in browser
+# http://localhost:3000
 ```
 
 **Features:**
 - 4-step wizard (Data Source → Filters → Preview → Run)
 - Real-time connection testing
 - Network preview before analysis
+- **Multi-language support** (🇬🇧 EN / 🇨🇳 中文)
+- Supports Discord & GitHub (DMWork via CLI)
 - Supports Discord & GitHub (DMWork via CLI)
 
 #### 🔌 New Adapters
