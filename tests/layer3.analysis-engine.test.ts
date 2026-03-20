@@ -280,4 +280,76 @@ describe('Layer 3: AnalysisEngine', () => {
       expect(details!.layer).toBe('L4_技术裁判');
     });
   });
+  
+  // ========================================
+  // Connoisseurship Detection Tests
+  // ========================================
+  
+  describe('Connoisseurship Detection', () => {
+    let connoisseurGraph: NetworkGraph;
+    let connoisseurEngine: AnalysisEngine;
+    
+    beforeEach(() => {
+      const humans: HumanNode[] = [
+        { id: 'user1', name: '刘乐君', type: 'human' },
+        { id: 'user2', name: 'User2', type: 'human' },
+      ];
+      
+      const messages: Message[] = [
+        // user1: 4 messages, 3 connoisseurship (75% frequency)
+        { id: 'm1', from_uid: 'user1', to_uids: ['user2'], content: '感觉这个设计不对，为什么要这样？', timestamp: new Date() }, // eval+crit=2
+        { id: 'm2', from_uid: 'user1', to_uids: ['user2'], content: 'UI很优雅流畅', timestamp: new Date() }, // taste=2
+        { id: 'm3', from_uid: 'user1', to_uids: ['user2'], content: '今天开会', timestamp: new Date() }, // 0
+        { id: 'm4', from_uid: 'user1', to_uids: ['user2'], content: '觉得没有飞书好用', timestamp: new Date() }, // eval+comp=2
+        
+        // user2: 2 messages, 0 connoisseurship (0% frequency)
+        { id: 'm5', from_uid: 'user2', to_uids: ['user1'], content: '收到', timestamp: new Date() },
+        { id: 'm6', from_uid: 'user2', to_uids: ['user1'], content: '好的', timestamp: new Date() },
+      ];
+      
+      connoisseurGraph = {
+        graph_id: 'connoisseur_test',
+        description: 'Connoisseurship test',
+        start_time: new Date('2026-03-01'),
+        end_time: new Date('2026-03-18'),
+        human_nodes: humans,
+        ai_agent_nodes: [],
+        edges: [],
+        messages,
+        summary: {
+          total_nodes: 2,
+          total_humans: 2,
+          total_bots: 0,
+          total_edges: 0,
+          total_messages: messages.length,
+        },
+        created_at: new Date(),
+        version: '2.0',
+      };
+      
+      connoisseurEngine = new AnalysisEngine(connoisseurGraph);
+    });
+    
+    it('should detect connoisseurship messages', () => {
+      const connoisseurshipIds = connoisseurEngine.detectConnoisseurshipMessages();
+      
+      expect(connoisseurshipIds.length).toBeGreaterThan(0);
+      expect(connoisseurshipIds.length).toBeLessThan(6); // Not all messages
+    });
+    
+    it('should calculate connoisseurship frequency per user', () => {
+      const frequencies = connoisseurEngine.calculateConnoisseurshipFrequency();
+      
+      expect(frequencies['user1']).toBeGreaterThan(0.5); // High frequency
+      expect(frequencies['user2']).toBe(0); // No connoisseurship
+    });
+    
+    it('should return top connoisseurs', () => {
+      const top = connoisseurEngine.getTopConnoisseurs(2);
+      
+      expect(top.length).toBe(2);
+      expect(top[0][0]).toBe('user1'); // user1 first (higher frequency)
+      expect(top[0][1]).toBeGreaterThan(top[1][1]); // Sorted descending
+    });
+  });
 });

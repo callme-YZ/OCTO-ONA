@@ -308,4 +308,92 @@ export class AnalysisEngine {
       layer: this.classifyConnoisseurLayer(hubScore),
     };
   }
+  
+  // ============================================
+  // Connoisseurship Detection
+  // ============================================
+  
+  /**
+   * Detect connoisseurship messages in the network
+   * 
+   * Uses rule-based keyword detection (4 categories).
+   * 
+   * @returns Array of connoisseurship message IDs
+   */
+  detectConnoisseurshipMessages(): string[] {
+    const { ConnoisseurDetector } = require('./connoisseur-detector');
+    
+    if (!this.networkGraph.messages) {
+      return [];
+    }
+    
+    const connoisseurshipMessages = ConnoisseurDetector.filterConnoisseurshipMessages(
+      this.networkGraph.messages
+    );
+    
+    console.log(`Detected ${connoisseurshipMessages.length}/${this.networkGraph.messages.length} connoisseurship messages`);
+    
+    return connoisseurshipMessages.map((msg: { id: string }) => msg.id);
+  }
+  
+  /**
+   * Calculate connoisseurship frequency for each user
+   * 
+   * Frequency = Connoisseurship Messages / Total Messages
+   * 
+   * @returns Record<uid, frequency>
+   */
+  calculateConnoisseurshipFrequency(): Record<string, number> {
+    const { ConnoisseurDetector } = require('./connoisseur-detector');
+    
+    if (!this.networkGraph.messages) {
+      return {};
+    }
+    
+    const frequencies: Record<string, number> = {};
+    
+    // Group messages by user
+    const messagesByUser: Record<string, Array<{ content: string }>> = {};
+    
+    for (const msg of this.networkGraph.messages) {
+      if (!messagesByUser[msg.from_uid]) {
+        messagesByUser[msg.from_uid] = [];
+      }
+      messagesByUser[msg.from_uid].push({ content: msg.content });
+    }
+    
+    // Calculate frequency for each user
+    for (const [uid, messages] of Object.entries(messagesByUser)) {
+      frequencies[uid] = ConnoisseurDetector.calculateFrequency(messages);
+    }
+    
+    console.log(`Calculated connoisseurship frequency for ${Object.keys(frequencies).length} users`);
+    
+    return frequencies;
+  }
+  
+  /**
+   * Get top connoisseurs by frequency
+   * 
+   * @param limit - Number of top users to return
+   * @returns Array of [uid, frequency, messageCount]
+   */
+  getTopConnoisseurs(limit: number = 10): Array<[string, number, number]> {
+    const frequencies = this.calculateConnoisseurshipFrequency();
+    
+    if (!this.networkGraph.messages) {
+      return [];
+    }
+    
+    // Count messages per user
+    const messageCounts: Record<string, number> = {};
+    for (const msg of this.networkGraph.messages) {
+      messageCounts[msg.from_uid] = (messageCounts[msg.from_uid] || 0) + 1;
+    }
+    
+    return Object.entries(frequencies)
+      .map(([uid, freq]) => [uid, freq, messageCounts[uid] || 0] as [string, number, number])
+      .sort((a, b) => b[1] - a[1]) // Sort by frequency descending
+      .slice(0, limit);
+  }
 }
