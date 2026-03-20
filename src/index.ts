@@ -10,6 +10,7 @@ export * from './layer2/models';
 // Layer 1: Data Adapters (Ready ✅)
 export * from './layer1/base-adapter';
 export * from './layer1/dmwork-adapter';
+export * from './layer1/validator';
 
 // Layer 3: Analysis Engine (Coming in Phase 2)
 // export * from './layer3/analysis-engine';
@@ -17,4 +18,4 @@ export * from './layer1/dmwork-adapter';
 // Layer 4: Metrics Calculator (Coming in Phase 3)
 // export * from './layer4/metrics-calculator';
 
-console.log('OCTO-ONA v0.1.0 - Phase 1 Complete');
+console.log('OCTO-ONA v0.1.0 - Phase 1 Complete ✅');

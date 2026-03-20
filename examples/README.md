@@ -79,3 +79,69 @@ const graph = await adapter.toNetworkGraph({
   graphId: 'octo_product_2026_03',
 });
 ```
+
+## Data Validation
+
+### Run Validation
+
+```bash
+npx ts-node examples/validation-demo.ts
+```
+
+### Validation Checks (7 total)
+
+1. **Node Count** — Detects 0 nodes or unexpectedly few
+2. **Message Count** — Detects missing data (table sharding issue)
+3. **Edge Count** — Detects isolated nodes
+4. **Core Member Presence** — Verifies UID whitelist members exist
+5. **Message Distribution** — Detects inactive nodes
+6. **Edge Consistency** — Detects orphan edges (missing nodes)
+7. **Time Range** — Warns if <7 days (ONA recommendation)
+
+### Validation Levels
+
+- 🔴 **CRITICAL** — Stops analysis (e.g., 0 nodes/messages)
+- ❌ **ERROR** — Major issue (e.g., data <10% expected)
+- ⚠️ **WARNING** — Minor issue (e.g., sparse network)
+- ℹ️ **INFO** — Informational (e.g., some nodes silent)
+
+### Example Output
+
+```
+=== Data Validation Report ===
+
+Status: ✅ PASSED
+
+Checks: 7
+Critical: 0
+Errors: 0
+Warnings: 1
+Info: 1
+
+Issues:
+
+⚠️ [TIME_RANGE_SHORT] Time range: 0.5 days (recommend ≥7)
+   💡 ONA typically needs ≥7 days for meaningful analysis.
+
+ℹ️ [NODES_NO_MESSAGES] 3 nodes sent 0 messages
+
+```
+
+### Programmatic Usage
+
+```typescript
+import { DataValidator } from '../src/layer1/validator';
+
+const validator = new DataValidator();
+const report = validator.validate(graph, {
+  expectedNodes: 15,
+  expectedMessages: 30000,
+  uidWhitelist: octoUids,
+  minMessagesPerNode: 10,
+});
+
+if (!report.passed) {
+  console.error('Validation failed!');
+  process.exit(1);
+}
+```
