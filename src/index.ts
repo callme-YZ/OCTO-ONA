@@ -11,6 +11,7 @@ export * from './layer2/models';
 export * from './layer1/base-adapter';
 export * from './layer1/dmwork-adapter';
 export * from './layer1/validator';
+export * from './layer1/adapters'; // Discord, GitHub
 
 // Layer 3: Analysis Engine (Ready ✅)
 export * from './layer3/analysis-engine';
