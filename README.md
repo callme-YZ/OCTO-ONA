@@ -59,6 +59,177 @@ open e2e-dashboard.html
 
 ---
 
+---
+
+### v1.1 Features (New!)
+
+#### 🌐 Web Configuration UI
+
+Visual interface for non-technical users:
+
+```bash
+# Start web UI server
+npx ts-node -e "import { ConfigServer } from './src/web-ui/config-server'; const server = new ConfigServer(); server.start(3000);"
+
+# Open browser
+open http://localhost:3000
+```
+
+**Features:**
+- 4-step wizard (Data Source → Filters → Preview → Run)
+- Real-time connection testing
+- Network preview before analysis
+- Supports Discord & GitHub (DMWork via CLI)
+
+#### 🔌 New Adapters
+
+**Discord Adapter:**
+```typescript
+import { DiscordAdapter } from './src/layer1/adapters/discord-adapter';
+
+const adapter = new DiscordAdapter();
+await adapter.connect({ token: 'YOUR_BOT_TOKEN', guildId: 'YOUR_GUILD_ID' });
+
+const graph = await adapter.extractNetwork({
+  channelIds: ['channel1', 'channel2'],
+  startTime: new Date('2026-01-01'),
+  endTime: new Date('2026-01-31'),
+});
+```
+
+**GitHub Adapter:**
+```typescript
+import { GitHubAdapter } from './src/layer1/adapters/github-adapter';
+
+const adapter = new GitHubAdapter();
+await adapter.connect({ token: 'ghp_xxxxx', owner: 'facebook', repo: 'react' });
+
+const graph = await adapter.extractNetwork({
+  issueStates: ['open', 'closed'],
+  startTime: new Date('2026-01-01'),
+  endTime: new Date('2026-01-31'),
+});
+```
+
+#### 📊 Export Formats
+
+**PDF Export:**
+```typescript
+import { PDFExporter } from './src/layer6/pdf-exporter';
+
+const exporter = new PDFExporter();
+const pdfBuffer = await exporter.generate(graph, metrics, {
+  title: 'ONA Report',
+  author: 'Your Name',
+});
+
+fs.writeFileSync('report.pdf', pdfBuffer);
+```
+
+**Excel Export:**
+```typescript
+import { ExcelExporter } from './src/layer6/excel-exporter';
+
+const exporter = new ExcelExporter();
+const excelBuffer = await exporter.export(metrics);
+
+fs.writeFileSync('metrics.xlsx', excelBuffer);
+```
+
+**PNG Charts:**
+```typescript
+import { ImageExporter } from './src/layer6/image-exporter';
+
+const exporter = new ImageExporter();
+
+// Network graph
+const networkImg = await exporter.exportNetworkGraph(graph);
+fs.writeFileSync('network.png', networkImg);
+
+// Hub score chart
+const chartImg = await exporter.exportHubScoreChart(metrics);
+fs.writeFileSync('hubscore.png', chartImg);
+```
+
+**REST API:**
+```typescript
+import { APIServer } from './src/layer6/api-server';
+
+const server = new APIServer({ port: 3000, cors: true });
+
+server.store('analysis-1', graph, metrics);
+
+await server.start(3000);
+// GET /api/v1/graphs
+// GET /api/v1/graph/:id
+// GET /api/v1/metrics/:id
+```
+
+#### 📈 Advanced Analytics
+
+**Comparison Analysis:**
+```typescript
+import { ComparisonAnalyzer } from './src/layer5/comparison-analyzer';
+
+const analyzer = new ComparisonAnalyzer();
+
+const report = analyzer.compare(
+  [graphWeek1, graphWeek2],
+  [metricsWeek1, metricsWeek2],
+  { dimension: 'time', labels: ['Week 1', 'Week 2'] }
+);
+
+console.log(`Hub Score change: ${report.changes[0].changeRate}%`);
+console.log(`New nodes: ${report.nodeChanges.added.length}`);
+```
+
+**Trend Analysis:**
+```typescript
+import { TrendAnalyzer } from './src/layer5/trend-analyzer';
+
+const analyzer = new TrendAnalyzer();
+
+const report = analyzer.analyzeTrend(
+  [graph1, graph2, graph3],
+  [metrics1, metrics2, metrics3],
+  { predictNext: true }
+);
+
+console.log(`Predicted density: ${report.trends[0].prediction}`);
+console.log(`Anomalies detected: ${report.trends[0].anomalies.length}`);
+```
+
+**Health Monitoring:**
+```typescript
+import { HealthMonitor } from './src/layer5/health-monitor';
+
+const monitor = new HealthMonitor();
+
+const report = monitor.detectAnomalies(graph, metrics);
+
+console.log(`Health score: ${report.score}/100`);
+console.log(`Risk level: ${report.riskLevel}`);
+
+for (const issue of report.issues) {
+  console.log(`- ${issue.type}: ${issue.description}`);
+  console.log(`  Recommendation: ${issue.recommendation}`);
+}
+```
+
+**Smart Recommendations:**
+```typescript
+import { Recommender } from './src/layer5/recommender';
+
+const recommender = new Recommender();
+
+const recommendations = recommender.suggestMentions('user-123', graph, metrics, { limit: 5 });
+
+for (const rec of recommendations) {
+  console.log(`@${rec.targetName}: ${rec.reason} (score: ${rec.score})`);
+}
+```
+
+
 
 ---
 
