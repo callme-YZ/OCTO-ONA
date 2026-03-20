@@ -21,12 +21,11 @@ export * from './layer4/metrics-calculator';
 export * from './layer4/core-metrics';
 export * from './layer4/bot-tagger';
 
-// Layer 5: Insight Engine (Coming in Phase 4)
+// Layer 6: Visualization (Ready ✅)
+export * from './layer6/dashboard-generator';
+
+// Layer 5: Insight Engine (Coming in Phase 5)
 // export * from './layer5/insight-engine';
 
-// Layer 6: Visualization (Coming in Phase 5)
-// export * from './layer6/dashboard';
-
-console.log('OCTO-ONA v0.5.0 - Phase 3 Complete ✅');
-console.log('Total Metrics: 15 (13 P0 + 2 P1)');
-console.log('Bot Tags: T1-T5 implemented');
+console.log('OCTO-ONA v0.6.0 - Phase 4 Step 1 Complete ✅');
+console.log('Dashboard template ready (462 lines HTML + 290 lines TS)');
