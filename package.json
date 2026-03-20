@@ -1,6 +1,6 @@
 {
   "name": "octo-ona",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "Organizational Network Analysis framework for Human-AI collaboration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
