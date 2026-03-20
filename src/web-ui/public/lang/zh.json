@@ -1,0 +1,51 @@
+{
+  "title": "OCTO-ONA 配置",
+  "subtitle": "4步轻松配置你的组织网络分析",
+  
+  "step1": {
+    "title": "选择数据源",
+    "platform": "平台",
+    "discord_token": "Bot Token",
+    "discord_token_placeholder": "你的 Discord Bot Token",
+    "discord_guild": "Guild ID",
+    "discord_guild_placeholder": "1234567890",
+    "github_token": "个人访问令牌",
+    "github_token_placeholder": "ghp_xxxxx",
+    "github_owner": "仓库所有者",
+    "github_owner_placeholder": "facebook",
+    "github_repo": "仓库名称",
+    "github_repo_placeholder": "react",
+    "test_connection": "测试连接"
+  },
+  
+  "step2": {
+    "title": "配置过滤器",
+    "start_date": "开始日期",
+    "end_date": "结束日期",
+    "discord_channels": "频道 ID（可选）",
+    "discord_channels_placeholder": "123,456,789",
+    "preview_btn": "🔍 预览网络"
+  },
+  
+  "step3": {
+    "title": "预览结果",
+    "nodes": "节点数",
+    "edges": "边数",
+    "messages": "消息数",
+    "time_range": "时间范围"
+  },
+  
+  "step4": {
+    "title": "运行分析",
+    "run_analysis": "🚀 运行分析"
+  },
+  
+  "messages": {
+    "connecting": "测试连接中...",
+    "success": "✅ 连接成功！",
+    "error": "❌ 连接失败：",
+    "previewing": "加载预览中...",
+    "analyzing": "运行分析中...",
+    "complete": "✅ 分析完成！Dashboard 已生成。"
+  }
+}

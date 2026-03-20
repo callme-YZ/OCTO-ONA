@@ -1,0 +1,51 @@
+{
+  "title": "OCTO-ONA Configuration",
+  "subtitle": "Configure your Organizational Network Analysis in 4 easy steps",
+  
+  "step1": {
+    "title": "Select Data Source",
+    "platform": "Platform",
+    "discord_token": "Bot Token",
+    "discord_token_placeholder": "Your Discord Bot Token",
+    "discord_guild": "Guild ID",
+    "discord_guild_placeholder": "1234567890",
+    "github_token": "Personal Access Token",
+    "github_token_placeholder": "ghp_xxxxx",
+    "github_owner": "Repository Owner",
+    "github_owner_placeholder": "facebook",
+    "github_repo": "Repository Name",
+    "github_repo_placeholder": "react",
+    "test_connection": "Test Connection"
+  },
+  
+  "step2": {
+    "title": "Configure Filters",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "discord_channels": "Channel IDs (optional)",
+    "discord_channels_placeholder": "123,456,789",
+    "preview_btn": "🔍 Preview Network"
+  },
+  
+  "step3": {
+    "title": "Preview Results",
+    "nodes": "Nodes",
+    "edges": "Edges",
+    "messages": "Messages",
+    "time_range": "Time Range"
+  },
+  
+  "step4": {
+    "title": "Run Analysis",
+    "run_analysis": "🚀 Run Analysis"
+  },
+  
+  "messages": {
+    "connecting": "Testing connection...",
+    "success": "✅ Connection successful!",
+    "error": "❌ Connection failed: ",
+    "previewing": "Loading preview...",
+    "analyzing": "Running analysis...",
+    "complete": "✅ Analysis complete! Dashboard generated."
+  }
+}

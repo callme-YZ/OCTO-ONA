@@ -3,15 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OCTO-ONA Configuration</title>
+  <title data-i18n="title">OCTO-ONA Configuration</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   
   <div class="container">
     <header>
-      <h1>🔍 OCTO-ONA Configuration</h1>
-      <p>Configure your Organizational Network Analysis in 4 easy steps</p>
+      <div class="header-content">
+        <div>
+          <h1 data-i18n="title">🔍 OCTO-ONA Configuration</h1>
+          <p data-i18n="subtitle">Configure your Organizational Network Analysis in 4 easy steps</p>
+        </div>
+        <div class="language-switcher">
+          <button class="lang-btn active" data-lang="en">🇬🇧 EN</button>
+          <button class="lang-btn" data-lang="zh">🇨🇳 中文</button>
+        </div>
+      </div>
     </header>
     
     <div class="content">
@@ -20,46 +28,44 @@
       <div class="step">
         <div class="step-title">
           <span class="step-number">1</span>
-          Select Data Source
+          <span data-i18n="step1.title">Select Data Source</span>
         </div>
         
         <div class="form-group">
-          <label for="adapterType">Platform</label>
+          <label for="adapterType" data-i18n="step1.platform">Platform</label>
           <select id="adapterType">
             <option value="discord">Discord (API)</option>
             <option value="github">GitHub (GraphQL)</option>
           </select>
         </div>
         
-        <!-- Discord Config -->
-        <div id="discord-config" class="hidden">
+        <div id="discord-config" class="adapter-config">
           <div class="form-group">
-            <label for="discord-token">Bot Token</label>
-            <input type="password" id="discord-token" placeholder="Your Discord Bot Token">
+            <label for="discord-token" data-i18n="step1.discord_token">Bot Token</label>
+            <input type="password" id="discord-token" data-i18n-placeholder="step1.discord_token_placeholder" placeholder="Your Discord Bot Token">
           </div>
           <div class="form-group">
-            <label for="discord-guild">Guild ID</label>
-            <input type="text" id="discord-guild" placeholder="1234567890">
-          </div>
-        </div>
-        
-        <!-- GitHub Config -->
-        <div id="github-config" class="hidden">
-          <div class="form-group">
-            <label for="github-token">Personal Access Token</label>
-            <input type="password" id="github-token" placeholder="ghp_xxxxx">
-          </div>
-          <div class="form-group">
-            <label for="github-owner">Repository Owner</label>
-            <input type="text" id="github-owner" placeholder="facebook">
-          </div>
-          <div class="form-group">
-            <label for="github-repo">Repository Name</label>
-            <input type="text" id="github-repo" placeholder="react">
+            <label for="discord-guild" data-i18n="step1.discord_guild">Guild ID</label>
+            <input type="text" id="discord-guild" data-i18n-placeholder="step1.discord_guild_placeholder" placeholder="1234567890">
           </div>
         </div>
         
-        <button id="test-connection">Test Connection</button>
+        <div id="github-config" class="adapter-config" style="display: none;">
+          <div class="form-group">
+            <label for="github-token" data-i18n="step1.github_token">Personal Access Token</label>
+            <input type="password" id="github-token" data-i18n-placeholder="step1.github_token_placeholder" placeholder="ghp_xxxxx">
+          </div>
+          <div class="form-group">
+            <label for="github-owner" data-i18n="step1.github_owner">Repository Owner</label>
+            <input type="text" id="github-owner" data-i18n-placeholder="step1.github_owner_placeholder" placeholder="facebook">
+          </div>
+          <div class="form-group">
+            <label for="github-repo" data-i18n="step1.github_repo">Repository Name</label>
+            <input type="text" id="github-repo" data-i18n-placeholder="step1.github_repo_placeholder" placeholder="react">
+          </div>
+        </div>
+        
+        <button id="test-connection" data-i18n="step1.test_connection">Test Connection</button>
         <div id="connection-status"></div>
       </div>
       
@@ -67,38 +73,52 @@
       <div class="step">
         <div class="step-title">
           <span class="step-number">2</span>
-          Configure Filters
+          <span data-i18n="step2.title">Configure Filters</span>
         </div>
         
         <div class="form-group">
-          <label for="start-date">Start Date</label>
+          <label for="start-date" data-i18n="step2.start_date">Start Date</label>
           <input type="date" id="start-date">
         </div>
         
         <div class="form-group">
-          <label for="end-date">End Date</label>
+          <label for="end-date" data-i18n="step2.end_date">End Date</label>
           <input type="date" id="end-date">
         </div>
         
-        <button id="preview-btn">🔍 Preview Network</button>
-        <div id="preview-status"></div>
+        <div id="discord-filters" class="adapter-filters">
+          <div class="form-group">
+            <label for="discord-channels" data-i18n="step2.discord_channels">Channel IDs (optional)</label>
+            <input type="text" id="discord-channels" data-i18n-placeholder="step2.discord_channels_placeholder" placeholder="123,456,789">
+          </div>
+        </div>
+        
+        <button id="preview-btn" data-i18n="step2.preview_btn">🔍 Preview Network</button>
+        <div id="preview-result"></div>
       </div>
       
-      <!-- Step 3: Run Analysis -->
+      <!-- Step 3: Preview -->
       <div class="step">
         <div class="step-title">
           <span class="step-number">3</span>
-          Run Analysis
+          <span data-i18n="step3.title">Preview Results</span>
         </div>
-        
-        <button id="run-analysis">🚀 Run Analysis</button>
-        <div id="run-status"></div>
+        <div id="preview-content"></div>
+      </div>
+      
+      <!-- Step 4: Run -->
+      <div class="step">
+        <div class="step-title">
+          <span class="step-number">4</span>
+          <span data-i18n="step4.title">Run Analysis</span>
+        </div>
+        <button id="run-analysis" data-i18n="step4.run_analysis">🚀 Run Analysis</button>
+        <div id="analysis-result"></div>
       </div>
       
     </div>
   </div>
   
   <script src="app.js"></script>
-  
 </body>
 </html>

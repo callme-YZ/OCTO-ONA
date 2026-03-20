@@ -1,3 +1,79 @@
+// ==================== i18n System ====================
+
+let currentLang = 'en';
+let translations = {};
+
+// Load language file
+async function loadLanguage(lang) {
+  try {
+    const response = await fetch(`/lang/${lang}.json`);
+    translations = await response.json();
+    currentLang = lang;
+    applyTranslations();
+    updateLangButtons();
+    
+    // Save preference
+    localStorage.setItem('octo-ona-lang', lang);
+  } catch (error) {
+    console.error('Failed to load language:', error);
+  }
+}
+
+// Apply translations to DOM
+function applyTranslations() {
+  // Update text content
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const text = getNestedValue(translations, key);
+    if (text) {
+      if (el.tagName === 'TITLE') {
+        document.title = text;
+      } else {
+        el.textContent = text;
+      }
+    }
+  });
+  
+  // Update placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    const text = getNestedValue(translations, key);
+    if (text) {
+      el.placeholder = text;
+    }
+  });
+}
+
+// Get nested object value by dot notation
+function getNestedValue(obj, path) {
+  return path.split('.').reduce((current, key) => current?.[key], obj);
+}
+
+// Get translated message
+function t(key) {
+  return getNestedValue(translations, key) || key;
+}
+
+// Update language button states
+function updateLangButtons() {
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+}
+
+// Language switcher event listeners
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    loadLanguage(btn.dataset.lang);
+  });
+});
+
+// Initialize language
+const savedLang = localStorage.getItem('octo-ona-lang') || 'en';
+loadLanguage(savedLang);
+
+// ==================== Application Logic ====================
+
 // State
 let currentAdapter = 'discord';
 
@@ -10,20 +86,19 @@ const githubConfig = document.getElementById('github-config');
 adapterTypeSelect.addEventListener('change', (e) => {
   currentAdapter = e.target.value;
   
-  discordConfig.classList.add('hidden');
-  githubConfig.classList.add('hidden');
-  
   if (currentAdapter === 'discord') {
-    discordConfig.classList.remove('hidden');
+    discordConfig.style.display = 'block';
+    githubConfig.style.display = 'none';
   } else if (currentAdapter === 'github') {
-    githubConfig.classList.remove('hidden');
+    discordConfig.style.display = 'none';
+    githubConfig.style.display = 'block';
   }
 });
 
 // Test Connection
 document.getElementById('test-connection').addEventListener('click', async () => {
   const statusDiv = document.getElementById('connection-status');
-  statusDiv.innerHTML = '<div class="status info">Testing connection...</div>';
+  statusDiv.innerHTML = `<div class="status info">${t('messages.connecting')}</div>`;
   
   const config = getConfig();
   
@@ -31,105 +106,123 @@ document.getElementById('test-connection').addEventListener('click', async () =>
     const response = await fetch('/api/test-connection', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adapterType: currentAdapter, config }),
+      body: JSON.stringify(config)
     });
     
     const result = await response.json();
     
-    if (result.success) {
-      statusDiv.innerHTML = `<div class="status success">✅ ${result.message}</div>`;
+    if (response.ok) {
+      statusDiv.innerHTML = `<div class="status success">${t('messages.success')}</div>`;
     } else {
-      statusDiv.innerHTML = `<div class="status error">❌ ${result.message}</div>`;
+      statusDiv.innerHTML = `<div class="status error">${t('messages.error')}${result.error}</div>`;
     }
   } catch (error) {
-    statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+    statusDiv.innerHTML = `<div class="status error">${t('messages.error')}${error.message}</div>`;
   }
 });
 
 // Preview Network
 document.getElementById('preview-btn').addEventListener('click', async () => {
-  const statusDiv = document.getElementById('preview-status');
-  statusDiv.innerHTML = '<div class="status info">Loading preview...</div>';
+  const previewDiv = document.getElementById('preview-content');
+  previewDiv.innerHTML = `<div class="status info">${t('messages.previewing')}</div>`;
   
   const config = getConfig();
-  const filters = getFilters();
   
   try {
     const response = await fetch('/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adapterType: currentAdapter, config, filters }),
+      body: JSON.stringify(config)
     });
     
     const result = await response.json();
     
-    if (result.error) {
-      statusDiv.innerHTML = `<div class="status error">❌ ${result.error}</div>`;
-      return;
+    if (response.ok) {
+      previewDiv.innerHTML = `
+        <div class="preview-stats">
+          <div class="stat-card">
+            <div class="stat-label">${t('step3.nodes')}</div>
+            <div class="stat-value">${result.stats.totalNodes}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">${t('step3.edges')}</div>
+            <div class="stat-value">${result.stats.totalEdges}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">${t('step3.messages')}</div>
+            <div class="stat-value">${result.stats.totalMessages}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">${t('step3.time_range')}</div>
+            <div class="stat-value">${formatDateRange(result.stats.startTime, result.stats.endTime)}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      previewDiv.innerHTML = `<div class="status error">${t('messages.error')}${result.error}</div>`;
     }
-    
-    statusDiv.innerHTML = '<div class="status success">✅ Preview loaded successfully</div>';
   } catch (error) {
-    statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+    previewDiv.innerHTML = `<div class="status error">${t('messages.error')}${error.message}</div>`;
   }
 });
 
 // Run Analysis
 document.getElementById('run-analysis').addEventListener('click', async () => {
-  const statusDiv = document.getElementById('run-status');
-  statusDiv.innerHTML = '<div class="status info">Running analysis... This may take a few minutes.</div>';
+  const resultDiv = document.getElementById('analysis-result');
+  resultDiv.innerHTML = `<div class="status info">${t('messages.analyzing')}</div>`;
   
   const config = getConfig();
-  const filters = getFilters();
   
   try {
     const response = await fetch('/api/run-analysis', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adapterType: currentAdapter, config, filters, outputFormat: 'dashboard' }),
+      body: JSON.stringify(config)
     });
     
     const result = await response.json();
     
-    if (result.error) {
-      statusDiv.innerHTML = `<div class="status error">❌ ${result.error}</div>`;
-      return;
+    if (response.ok) {
+      resultDiv.innerHTML = `
+        <div class="status success">${t('messages.complete')}</div>
+        <a href="${result.dashboardPath}" target="_blank" class="dashboard-link">
+          📊 Open Dashboard
+        </a>
+      `;
+    } else {
+      resultDiv.innerHTML = `<div class="status error">${t('messages.error')}${result.error}</div>`;
     }
-    
-    statusDiv.innerHTML = `
-      <div class="status success">
-        ✅ Analysis complete!<br>
-        Output: <strong>${result.outputPath}</strong><br>
-        Nodes: ${result.metrics.nodeCount}, Edges: ${result.metrics.edgeCount}
-      </div>
-    `;
   } catch (error) {
-    statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+    resultDiv.innerHTML = `<div class="status error">${t('messages.error')}${error.message}</div>`;
   }
 });
 
-// Helper functions
+// Helper Functions
 function getConfig() {
+  const config = {
+    adapter: currentAdapter,
+    startTime: document.getElementById('start-date').value,
+    endTime: document.getElementById('end-date').value
+  };
+  
   if (currentAdapter === 'discord') {
-    return {
-      token: document.getElementById('discord-token').value,
-      guildId: document.getElementById('discord-guild').value,
-    };
+    config.token = document.getElementById('discord-token').value;
+    config.guildId = document.getElementById('discord-guild').value;
+    const channels = document.getElementById('discord-channels').value;
+    if (channels) {
+      config.channelIds = channels.split(',').map(c => c.trim());
+    }
   } else if (currentAdapter === 'github') {
-    return {
-      token: document.getElementById('github-token').value,
-      owner: document.getElementById('github-owner').value,
-      repo: document.getElementById('github-repo').value,
-    };
+    config.token = document.getElementById('github-token').value;
+    config.owner = document.getElementById('github-owner').value;
+    config.repo = document.getElementById('github-repo').value;
   }
+  
+  return config;
 }
 
-function getFilters() {
-  const startDate = document.getElementById('start-date').value;
-  const endDate = document.getElementById('end-date').value;
-  
-  return {
-    startTime: startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    endTime: endDate ? new Date(endDate) : new Date(),
-  };
+function formatDateRange(start, end) {
+  const startDate = new Date(start).toLocaleDateString();
+  const endDate = new Date(end).toLocaleDateString();
+  return `${startDate} - ${endDate}`;
 }
