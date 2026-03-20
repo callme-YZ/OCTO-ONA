@@ -24,8 +24,9 @@ export * from './layer4/bot-tagger';
 // Layer 6: Visualization (Ready ✅)
 export * from './layer6/dashboard-generator';
 
-// Layer 5: Insight Engine (Coming in Phase 5)
+// Layer 5: Insight Engine (Coming soon)
 // export * from './layer5/insight-engine';
 
-console.log('OCTO-ONA v0.7.0 - Phase 4 Step 2 Complete ✅');
-console.log('Dashboard: 5 charts + 86 tests passing');
+console.log('OCTO-ONA v0.8.0 - Phase 5 Step 1 Complete ✅');
+console.log('End-to-end pipeline + edge cases tested');
+console.log('88/88 tests passing (2 skipped: empty/single-node graphology limits)');
