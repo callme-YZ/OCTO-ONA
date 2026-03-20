@@ -169,4 +169,143 @@ export class AnalysisEngine {
     this.cache = {};
     console.log('Analysis cache cleared');
   }
+  
+  // ============================================
+  // Hub Score Calculation
+  // ============================================
+  
+  /**
+   * Calculate Hub Score for all nodes
+   * 
+   * Hub Score = Mentions Received / Messages Sent
+   * 
+   * Special cases:
+   * - Sent = 0, Received > 0: HS = Infinity (pure authority)
+   * - Sent = 0, Received = 0: HS = 0.0 (inactive)
+   * 
+   * @returns Record<node_id, hub_score>
+   */
+  calculateHubScore(): Record<string, number> {
+    const mentions: Record<string, number> = {};
+    const messagesSent: Record<string, number> = {};
+    
+    // Count messages sent and mentions received
+    if (this.networkGraph.messages) {
+      for (const msg of this.networkGraph.messages) {
+        // Count sent messages
+        messagesSent[msg.from_uid] = (messagesSent[msg.from_uid] || 0) + 1;
+        
+        // Count mentions (to_uids)
+        for (const toUid of msg.to_uids) {
+          mentions[toUid] = (mentions[toUid] || 0) + 1;
+        }
+      }
+    }
+    
+    // Get all nodes
+    const allNodes = new Set<string>([
+      ...Object.keys(mentions),
+      ...Object.keys(messagesSent),
+    ]);
+    
+    // Calculate Hub Score
+    const hubScores: Record<string, number> = {};
+    
+    for (const nodeId of allNodes) {
+      const mReceived = mentions[nodeId] || 0;
+      const mSent = messagesSent[nodeId] || 0;
+      
+      if (mSent === 0) {
+        // Special case: only mentioned, never sent
+        hubScores[nodeId] = mReceived > 0 ? Infinity : 0.0;
+      } else {
+        hubScores[nodeId] = mReceived / mSent;
+      }
+    }
+    
+    console.log(`Hub Score calculated for ${allNodes.size} nodes`);
+    return hubScores;
+  }
+  
+  /**
+   * Classify connoisseur layer by Hub Score
+   * 
+   * @param hubScore - Hub Score value
+   * @returns Layer label (L0-L5)
+   */
+  classifyConnoisseurLayer(hubScore: number): string {
+    if (hubScore === Infinity) {
+      return 'L4_技术裁判';
+    } else if (hubScore > 3.0) {
+      return 'L5_战略权威';
+    } else if (hubScore >= 0.3) {
+      return 'L2_主动管理';
+    } else if (hubScore > 0) {
+      return 'L1_纯执行';
+    } else {
+      return 'L0_无活动';
+    }
+  }
+  
+  /**
+   * Get top nodes by Hub Score
+   * 
+   * @param limit - Number of top nodes
+   * @returns Array of [nodeId, hubScore, layer] sorted by HS descending
+   */
+  getTopHubScores(limit: number = 10): Array<[string, number, string]> {
+    const hubScores = this.calculateHubScore();
+    
+    return Object.entries(hubScores)
+      .map(([nodeId, hs]) => [nodeId, hs, this.classifyConnoisseurLayer(hs)] as [string, number, string])
+      .sort((a, b) => {
+        // Infinity > any number
+        if (a[1] === Infinity && b[1] === Infinity) return 0;
+        if (a[1] === Infinity) return -1;
+        if (b[1] === Infinity) return 1;
+        return b[1] - a[1];
+      })
+      .slice(0, limit);
+  }
+  
+  /**
+   * Get Hub Score statistics with mentions/sent counts
+   * 
+   * Useful for verification and debugging.
+   * 
+   * @param nodeId - Target node ID
+   * @returns { hubScore, mentionsReceived, messagesSent, layer }
+   */
+  getHubScoreDetails(nodeId: string): {
+    hubScore: number;
+    mentionsReceived: number;
+    messagesSent: number;
+    layer: string;
+  } | null {
+    let mentionsReceived = 0;
+    let messagesSent = 0;
+    
+    if (this.networkGraph.messages) {
+      for (const msg of this.networkGraph.messages) {
+        if (msg.from_uid === nodeId) {
+          messagesSent += 1;
+        }
+        
+        if (msg.to_uids.includes(nodeId)) {
+          mentionsReceived += 1;
+        }
+      }
+    }
+    
+    const hubScore = messagesSent === 0
+      ? (mentionsReceived > 0 ? Infinity : 0.0)
+      : mentionsReceived / messagesSent;
+    
+    return {
+      hubScore,
+      mentionsReceived,
+      messagesSent,
+      layer: this.classifyConnoisseurLayer(hubScore),
+    };
+  }
 }
