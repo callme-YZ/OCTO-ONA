@@ -24,3 +24,8 @@ npm-debug.log*
 
 # OS
 .DS_Store
+
+# Test outputs
+examples/*.pdf
+examples/*.xlsx
+examples/*.png
