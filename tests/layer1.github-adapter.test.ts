@@ -1,34 +1,129 @@
 /**
- * GitHubAdapter Tests
+ * GitHub Adapter Tests (with Nock mocking)
  */
 
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import nock from 'nock';
 import { GitHubAdapter } from '../src/layer1/adapters/github-adapter';
 
-describe('Layer 1: GitHubAdapter', () => {
+describe('GitHubAdapter', () => {
+  beforeEach(() => {
+    nock.cleanAll();
+  });
   
-  describe('Connection', () => {
-    it('should create adapter instance', () => {
-      const adapter = new GitHubAdapter();
-      expect(adapter).toBeInstanceOf(GitHubAdapter);
-    });
-    
-    it('should require token and repo info', async () => {
+  afterEach(() => {
+    nock.cleanAll();
+  });
+  
+  describe('connect', () => {
+    it('should verify GitHub token successfully', async () => {
+      // Mock GitHub GraphQL API
+      nock('https://api.github.com')
+        .post('/graphql')
+        .reply(200, {
+          data: {
+            viewer: {
+              login: 'testuser',
+            },
+          },
+        });
+      
       const adapter = new GitHubAdapter();
       
       await expect(
-        adapter.extractNetwork({
-          startTime: new Date(),
-          endTime: new Date(),
-        })
-      ).rejects.toThrow('Not connected');
+        adapter.connect({ token: 'ghp_test', owner: 'facebook', repo: 'react' })
+      ).resolves.not.toThrow();
+    });
+    
+    it('should throw error on invalid token', async () => {
+      // Mock GitHub API - Unauthorized
+      nock('https://api.github.com')
+        .post('/graphql')
+        .reply(401, { message: 'Bad credentials' });
+      
+      const adapter = new GitHubAdapter();
+      
+      await expect(
+        adapter.connect({ token: 'invalid', owner: 'owner', repo: 'repo' })
+      ).rejects.toThrow();
     });
   });
   
-  describe('Mock Data Extraction', () => {
-    it('should handle empty issues', async () => {
-      // This is a placeholder test
-      // Real tests would use mocked GitHub GraphQL responses
-      expect(true).toBe(true);
+  describe('extractNetwork', () => {
+    it('should extract network without errors', async () => {
+      const adapter = new GitHubAdapter();
+      
+      // Mock: Verify token
+      nock('https://api.github.com')
+        .post('/graphql')
+        .reply(200, {
+          data: { viewer: { login: 'testuser' } },
+        });
+      
+      await adapter.connect({ token: 'ghp_test', owner: 'facebook', repo: 'react' });
+      
+      // Mock: Fetch issues (empty response for simplicity)
+      nock('https://api.github.com')
+        .post('/graphql')
+        .reply(200, {
+          data: {
+            repository: {
+              issues: {
+                edges: [],
+                pageInfo: { hasNextPage: false },
+              },
+            },
+          },
+        });
+      
+      const graph = await adapter.extractNetwork({
+        startTime: new Date('2026-01-01'),
+        endTime: new Date('2026-01-02'),
+      });
+      
+      await adapter.disconnect();
+      
+      expect(graph).toBeDefined();
+      expect(graph.graph_id).toBeDefined();
+      expect(graph.summary).toBeDefined();
+    });
+    
+    it('should handle API errors gracefully', async () => {
+      const adapter = new GitHubAdapter();
+      
+      nock('https://api.github.com')
+        .post('/graphql')
+        .reply(200, { data: { viewer: { login: 'test' } } });
+      
+      await adapter.connect({ token: 'ghp_test', owner: 'owner', repo: 'repo' });
+      
+      // Mock: API error
+      nock('https://api.github.com')
+        .post('/graphql')
+        .reply(500, { message: 'Internal Server Error' });
+      
+      await expect(
+        adapter.extractNetwork({
+          startTime: new Date('2026-01-01'),
+          endTime: new Date('2026-01-02'),
+        })
+      ).rejects.toThrow();
+      
+      await adapter.disconnect();
+    });
+  });
+  
+  describe('disconnect', () => {
+    it('should disconnect successfully', async () => {
+      const adapter = new GitHubAdapter();
+      
+      nock('https://api.github.com')
+        .post('/graphql')
+        .reply(200, { data: { viewer: { login: 'test' } } });
+      
+      await adapter.connect({ token: 'ghp_test', owner: 'owner', repo: 'repo' });
+      
+      await expect(adapter.disconnect()).resolves.not.toThrow();
     });
   });
 });

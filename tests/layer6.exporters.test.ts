@@ -201,3 +201,20 @@ describe('APIServer', () => {
     await expect(server.start(3001)).resolves.toBeUndefined();
   });
 });
+
+/**
+ * Integration Tests (Skipped - Heavy dependencies)
+ * 
+ * These tests require:
+ * - Puppeteer (200MB+ Chromium download)
+ * - ExcelJS (file system writes)
+ * - Supertest (HTTP server)
+ * 
+ * Manual verification script available:
+ * - examples/test-exporters.ts
+ * 
+ * To run integration tests:
+ * 1. Ensure Chromium is downloaded: npx puppeteer browsers install chrome
+ * 2. Remove .skip from tests below
+ * 3. Run: npm test -- layer6.exporters
+ */
