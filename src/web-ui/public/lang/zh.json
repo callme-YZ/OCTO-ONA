@@ -23,6 +23,8 @@
     "octo_password": "数据库密码",
     "octo_password_placeholder": "你的密码",
     "octo_database": "数据库名称",
+    "download_template": "📥 下载 Excel 模板",
+    "upload_excel": "上传填写好的模板",
     "test_connection": "测试连接"
   },
   

@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.5] - 2026-03-20
+
+### Added
+- 📥 **Excel Template Generator** — Download pre-formatted Excel template
+- 📤 **Excel File Import** — Upload filled template for analysis
+- 📊 **3-Sheet Template** — Users, Messages, Instructions
+- 🎨 **Formatted Template** — Color-coded headers, example data
+- 📝 **Detailed Instructions** — In-template user guide
+
+### Changed
+- 🌐 **Web UI Enhancement** — Excel option in platform selector
+- 🔄 **File Upload Support** — Multer integration (10MB limit)
+- 🗑️ **Auto Cleanup** — Uploaded files deleted after analysis
+
+### Technical
+- `src/layer1/adapters/excel-template.ts` (250 lines) — Template generator
+- `src/layer1/adapters/excel-adapter.ts` (240 lines) — Excel parser
+- Updated `config-server.ts` — Template download + file upload routes
+- Updated Web UI (HTML/JS/CSS) — Excel configuration panel
+- New dependency: multer@1.4.5-lts.1
+- 127/127 tests passing (100%)
+
+### Use Cases
+- ✅ Users without database access
+- ✅ Manual data collection (meetings, emails)
+- ✅ Small-scale testing (<100 people)
+- ✅ Cross-platform data fusion
+
+### Security
+- ✅ File size limit (10MB)
+- ✅ File type validation (.xlsx only)
+- ✅ Auto cleanup after analysis
+- ✅ No permanent storage
+
+### Example Workflow
+1. Download template: Click "📥 Download Excel Template"
+2. Fill data: Users sheet + Messages sheet
+3. Upload: Select filled .xlsx file
+4. Analyze: Click "🚀 Run Analysis"
+5. View: Dashboard generated automatically
+
+---
+
 ## [1.1.4] - 2026-03-20
 
 ### Added

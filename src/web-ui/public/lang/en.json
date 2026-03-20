@@ -23,6 +23,8 @@
     "octo_password": "Database Password",
     "octo_password_placeholder": "your-password",
     "octo_database": "Database Name",
+    "download_template": "📥 Download Excel Template",
+    "upload_excel": "Upload Filled Template",
     "test_connection": "Test Connection"
   },
   

@@ -76,6 +76,7 @@ loadLanguage(savedLang);
 
 // State
 let currentAdapter = 'discord';
+let uploadedFilePath = null;
 
 // Elements
 const adapterTypeSelect = document.getElementById('adapterType');
@@ -99,6 +100,9 @@ adapterTypeSelect.addEventListener('change', (e) => {
   } else if (currentAdapter === 'github') {
     githubConfig.style.display = 'block';
   } else if (currentAdapter === 'octo' && octoConfig) {
+  } else if (currentAdapter === 'excel') {
+    const excelConfig = document.getElementById('excel-config');
+    if (excelConfig) excelConfig.style.display = 'block';
     octoConfig.style.display = 'block';
   }
 });
@@ -232,6 +236,12 @@ function getConfig() {
     config.owner = document.getElementById('github-owner').value;
     config.repo = document.getElementById('github-repo').value;
   } else if (currentAdapter === 'octo') {
+  } else if (currentAdapter === 'excel') {
+    if (!window.uploadedFilePath) {
+      alert('Please upload an Excel file first');
+      return config;
+    }
+    config.filePath = window.uploadedFilePath;
     config.host = document.getElementById('octo-host').value;
     config.port = parseInt(document.getElementById('octo-port').value) || 3306;
     config.user = document.getElementById('octo-user').value;
@@ -241,7 +251,75 @@ function getConfig() {
     if (channels) {
       config.channelIds = channels.split(',').map(c => c.trim());
     }
+  } else if (currentAdapter === 'excel') {
+    if (!window.uploadedFilePath) {
+      alert('Please upload an Excel file first');
+      return config;
+    }
+    config.filePath = window.uploadedFilePath;
   }
   
   return config;
 }
+
+// ==================== Excel Support ====================
+
+// Download template
+const downloadTemplateBtn = document.getElementById('download-template');
+if (downloadTemplateBtn) {
+  downloadTemplateBtn.addEventListener('click', async () => {
+    try {
+      const response = await fetch('/api/template');
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'OCTO-ONA-Template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Failed to download template: ' + error.message);
+    }
+  });
+}
+
+// File upload
+const excelFileInput = document.getElementById('excel-file');
+let uploadedFilePath = null;
+
+if (excelFileInput) {
+  excelFileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const uploadStatus = document.getElementById('upload-status');
+    uploadStatus.innerHTML = '<div class="status info">Uploading...</div>';
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        uploadedFilePath = result.filePath;
+        uploadStatus.innerHTML = `<div class="status success">✅ File uploaded successfully! (${result.stats.users} users, ${result.stats.messages} messages)</div>`;
+      } else {
+        uploadStatus.innerHTML = `<div class="status error">❌ Upload failed: ${result.error}</div>`;
+      }
+    } catch (error) {
+      uploadStatus.innerHTML = `<div class="status error">❌ Upload failed: ${error.message}</div>`;
+    }
+  });
+}
+
+// Update getConfig to support Excel
