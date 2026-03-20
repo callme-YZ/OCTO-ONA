@@ -16,7 +16,14 @@ export * from './layer1/validator';
 export * from './layer3/analysis-engine';
 export * from './layer3/connoisseur-detector';
 
-// Layer 4: Metrics Calculator (Coming in Phase 3)
-// export * from './layer4/metrics-calculator';
+// Layer 4: Metrics Calculator (Ready ✅)
+export * from './layer4/metrics-calculator';
+export * from './layer4/core-metrics';
 
-console.log('OCTO-ONA v0.3.0 - Phase 2 Step 3 Complete ✅');
+// Layer 5: Insight Engine (Coming in Phase 4)
+// export * from './layer5/insight-engine';
+
+// Layer 6: Visualization (Coming in Phase 5)
+// export * from './layer6/dashboard';
+
+console.log('OCTO-ONA v0.4.0 - Phase 3 Step 1 Complete ✅');
