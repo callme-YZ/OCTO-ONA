@@ -115,6 +115,16 @@ export abstract class BaseAdapter {
     return { humanNodes, aiAgentNodes };
   }
   
+  /**
+   * Build edges from messages by aggregating interactions
+   * 
+   * Creates edges between from_uid and each to_uid.
+   * Aggregates multiple messages into single edge with weight.
+   * Tracks first/last interaction timestamps.
+   * 
+   * @param messages - Message list from fetchMessages()
+   * @returns Array of Edge objects with weights and timestamps
+   */
   buildEdges(messages: SourceMessage[]): Edge[] {
     const edgeMap = new Map<string, {
       weight: number;

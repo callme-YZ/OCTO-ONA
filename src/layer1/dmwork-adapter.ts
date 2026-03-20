@@ -62,13 +62,22 @@ export class DMWorkAdapter extends BaseAdapter {
   }
   
   async fetchUsers(): Promise<SourceUser[]> {
-    const [userRows] = await this.pool.query<mysql.RowDataPacket[]>(
-      'SELECT uid, name, robot, email FROM user'
-    );
+    let userRows: mysql.RowDataPacket[];
+    let robotRows: mysql.RowDataPacket[];
     
-    const [robotRows] = await this.pool.query<mysql.RowDataPacket[]>(
-      'SELECT robot_id, creator_uid FROM robot'
-    );
+    try {
+      [userRows] = await this.pool.query<mysql.RowDataPacket[]>(
+        'SELECT uid, name, robot, email FROM user'
+      );
+      
+      [robotRows] = await this.pool.query<mysql.RowDataPacket[]>(
+        'SELECT robot_id, creator_uid FROM robot'
+      );
+    } catch (error) {
+      throw new Error(
+        `[DMWork] Failed to fetch users from database: ${error instanceof Error ? error.message : 'Connection failed'}`
+      );
+    }
     
     const robotCreators = new Map<string, string>();
     for (const robot of robotRows) {
@@ -138,6 +147,17 @@ export class DMWorkAdapter extends BaseAdapter {
     return allMessages;
   }
   
+  /**
+   * Infer message recipient UIDs from payload and group context
+   * 
+   * Strategy:
+   * 1. Priority: Use payload.mention.uids (direct @ mentions)
+   * 2. Fallback: Query group_member table (group context, max 50 members)
+   * 
+   * @param msg - Raw DMWork message from database
+   * @returns Array of recipient UIDs
+   * @private
+   */
   private async _inferToUids(msg: DMWorkMessage): Promise<string[]> {
     const toUids: string[] = [];
     
@@ -153,7 +173,10 @@ export class DMWorkAdapter extends BaseAdapter {
         toUids.push(...payload.mention.uids);
       }
     } catch (error) {
-      // Ignore parse errors
+      // Log parse errors for debugging
+      if (process.env.DEBUG) {
+        console.warn(`[DMWork] Failed to parse payload for message ${msg.message_id}:`, error instanceof Error ? error.message : 'Unknown error');
+      }
     }
     
     // Source 2: If no mentions, infer from group context
@@ -169,6 +192,16 @@ export class DMWorkAdapter extends BaseAdapter {
     return toUids;
   }
   
+  /**
+   * Extract text content from DMWork message payload
+   * 
+   * Attempts to parse payload JSON and extract content/text fields.
+   * Returns empty string if parsing fails (malformed JSON).
+   * 
+   * @param payload - Raw payload (Buffer or JSON string)
+   * @returns Extracted text content, or empty string
+   * @private
+   */
   private _extractContent(payload: Buffer | string): string {
     try {
       const payloadStr = typeof payload === 'string'
@@ -178,6 +211,10 @@ export class DMWorkAdapter extends BaseAdapter {
       const data = JSON.parse(payloadStr);
       return data.content || data.text || '';
     } catch (error) {
+      // Return empty string for malformed payloads
+      if (process.env.DEBUG) {
+        console.warn('[DMWork] Failed to extract content from payload:', error instanceof Error ? error.message : 'Unknown error');
+      }
       return '';
     }
   }

@@ -145,3 +145,44 @@ if (!report.passed) {
   process.exit(1);
 }
 ```
+
+## Performance Testing
+
+### Run Performance Test
+
+```bash
+npx ts-node examples/performance-test.ts
+```
+
+### Test Scenarios
+
+**Test 1: Full Dataset**
+- Time range: 2026-03-01 to 2026-03-18
+- Expected: ~600k messages from 5 tables
+- Target: Complete in <60s
+
+**Test 2: Filtered Dataset (UID Whitelist)**
+- Same time range with 7-person whitelist
+- Expected: ~30k messages
+- Target: Complete in <30s
+
+### Performance Targets
+
+| Scenario | Messages | Target Time | Target Throughput |
+|----------|----------|-------------|-------------------|
+| Full | 600k | <60s | >10k msgs/s |
+| Filtered | 30k | <30s | >1k msgs/s |
+
+### Exit Codes
+
+- `0` — All tests passed
+- `1` — Performance below target (needs optimization)
+
+### Optimization Suggestions
+
+If performance is below target:
+
+1. **Parallel Table Queries** — Use `Promise.all()` for 5 tables
+2. **Batch Processing** — Process messages in chunks (10k at a time)
+3. **Index Optimization** — Check database indexes on `created_at`, `channel_id`
+4. **Connection Pooling** — Increase `connectionLimit` from 10 to 20
