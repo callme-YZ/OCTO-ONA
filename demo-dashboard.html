@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCTO-ONA Dashboard - demo_network</title>
+    
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .header .meta {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* KPI Cards */
+        .kpi-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        
+        .kpi-card .label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        
+        .kpi-card .value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .kpi-card .unit {
+            font-size: 14px;
+            color: #95a5a6;
+            margin-left: 5px;
+        }
+        
+        /* Chart Grid */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .chart.small {
+            height: 300px;
+        }
+        
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Tags */
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        
+        .tag-t1 { background: #e3f2fd; color: #1976d2; }
+        .tag-t2 { background: #f3e5f5; color: #7b1fa2; }
+        .tag-t3 { background: #fff3e0; color: #f57c00; }
+        .tag-t4 { background: #e8f5e9; color: #388e3c; }
+        .tag-t5 { background: #fce4ec; color: #c2185b; }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #95a5a6;
+            font-size: 14px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🐙 OCTO-ONA Dashboard</h1>
+            <div class="meta">
+                Network ID: demo_network | 
+                Period: 2026-03-01 - 2026-03-18 | 
+                Generated: 2026-03-20T02:37:17.390Z
+            </div>
+        </div>
+        
+        <!-- KPI Cards -->
+        <div class="kpi-cards">
+            <div class="kpi-card">
+                <div class="label">Total Nodes</div>
+                <div class="value">8</div>
+            </div>
+            <div class="kpi-card" style="border-left-color: #5470c6;">
+                <div class="label">Human Nodes</div>
+                <div class="value">5</div>
+            </div>
+            <div class="kpi-card" style="border-left-color: #91cc75;">
+                <div class="label">AI Agent Nodes</div>
+                <div class="value">3</div>
+            </div>
+            <div class="kpi-card" style="border-left-color: #fac858;">
+                <div class="label">Total Messages</div>
+                <div class="value">3872</div>
+            </div>
+            <div class="kpi-card" style="border-left-color: #ee6666;">
+                <div class="label">Network Density</div>
+                <div class="value">0.232</div>
+            </div>
+        </div>
+        
+        <!-- Charts Grid -->
+        <div class="chart-grid">
+            <!-- Chart 1: Hub Score Bar Chart -->
+            <div class="chart-container">
+                <div class="chart-title">🏆 Hub Score Rankings</div>
+                <div id="hubScoreChart" class="chart small"></div>
+            </div>
+            
+            <!-- Chart 2: Bot Tags Pie Chart -->
+            <div class="chart-container">
+                <div class="chart-title">🤖 Bot Functional Tags</div>
+                <div id="botTagsChart" class="chart small"></div>
+            </div>
+            
+            <!-- Chart 3: Network Graph (Full Width) -->
+            <div class="chart-container full-width">
+                <div class="chart-title">🌐 Network Graph</div>
+                <div id="networkGraph" class="chart"></div>
+            </div>
+            
+            <!-- Chart 4: Message Timeline -->
+            <div class="chart-container">
+                <div class="chart-title">📊 Message Timeline</div>
+                <div id="timelineChart" class="chart small"></div>
+            </div>
+            
+            <!-- Chart 5: Top Interactions Table -->
+            <div class="chart-container">
+                <div class="chart-title">👥 Top 10 Interactions</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Messages</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>#1</td>
+                                <td>wuyun_bot</td>
+                                <td>嘉伟</td>
+                                <td><strong>20</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#2</td>
+                                <td>辉哥</td>
+                                <td>嘉伟</td>
+                                <td><strong>15</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#3</td>
+                                <td>wuyun_bot</td>
+                                <td>辉哥</td>
+                                <td><strong>15</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#4</td>
+                                <td>黄楠</td>
+                                <td>嘉伟</td>
+                                <td><strong>12</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#5</td>
+                                <td>黄楠</td>
+                                <td>辉哥</td>
+                                <td><strong>10</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#6</td>
+                                <td>chenpipi_bot</td>
+                                <td>黄楠</td>
+                                <td><strong>10</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#7</td>
+                                <td>chenpipi_bot</td>
+                                <td>刘乐君</td>
+                                <td><strong>10</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#8</td>
+                                <td>刘乐君</td>
+                                <td>嘉伟</td>
+                                <td><strong>8</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#9</td>
+                                <td>辉哥</td>
+                                <td>黄楠</td>
+                                <td><strong>8</strong></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>#10</td>
+                                <td>chenpipi_bot</td>
+                                <td>Alice</td>
+                                <td><strong>8</strong></td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            Powered by OCTO-ONA v0.5.0 | 
+            Generated with ❤️ by Mayo
+        </div>
+    </div>
+    
+    <script>
+        // Data injected by EJS
+        const hubScoreData = {"names":["嘉伟","辉哥","Alice","刘乐君","黄楠","wuyun_bot","chenpipi_bot","clever_bot"],"values":[2.683098591549296,2.6460481099656357,2.6153846153846154,2.539249146757679,2.5,0,0,0],"layers":["L2_主动管理","L2_主动管理","L2_主动管理","L2_主动管理","L2_主动管理","L0_无活动","L0_无活动","L0_无活动"]};
+        const botTagsData = [{"name":"T5","value":1}];
+        const networkData = {"nodes":[{"id":"h1","name":"嘉伟","category":0,"value":5},{"id":"h2","name":"辉哥","category":0,"value":6},{"id":"h3","name":"黄楠","category":0,"value":5},{"id":"h4","name":"刘乐君","category":0,"value":3},{"id":"h5","name":"Alice","category":0,"value":1},{"id":"b1","name":"wuyun_bot","category":1,"value":2},{"id":"b2","name":"chenpipi_bot","category":1,"value":3},{"id":"b3","name":"clever_bot","category":1,"value":1}],"links":[{"source":"h2","target":"h1","value":15},{"source":"h3","target":"h1","value":12},{"source":"h4","target":"h1","value":8},{"source":"h1","target":"h2","value":3},{"source":"h3","target":"h2","value":10},{"source":"h4","target":"h2","value":6},{"source":"h2","target":"h3","value":8},{"source":"b1","target":"h1","value":20},{"source":"b1","target":"h2","value":15},{"source":"b2","target":"h3","value":10},{"source":"b2","target":"h4","value":10},{"source":"b2","target":"h5","value":8},{"source":"b3","target":"h3","value":5}],"categories":[{"name":"Human"},{"name":"AI Agent"}]};
+        const timelineData = {"dates":["2026-03-01","2026-03-02","2026-03-03","2026-03-04","2026-03-05","2026-03-06","2026-03-07","2026-03-08","2026-03-09","2026-03-10","2026-03-11","2026-03-12","2026-03-13","2026-03-14","2026-03-15","2026-03-16","2026-03-17"],"counts":[200,250,259,239,256,244,242,192,210,193,186,213,254,204,246,254,230]};
+        
+        // Chart 1: Hub Score Bar Chart
+        const hubScoreChart = echarts.init(document.getElementById('hubScoreChart'));
+        const hubScoreOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                name: 'Hub Score'
+            },
+            yAxis: {
+                type: 'category',
+                data: hubScoreData.names,
+                axisLabel: {
+                    fontSize: 12
+                }
+            },
+            series: [{
+                name: 'Hub Score',
+                type: 'bar',
+                data: hubScoreData.values,
+                itemStyle: {
+                    color: (params) => {
+                        const layer = hubScoreData.layers[params.dataIndex];
+                        const colors = {
+                            'L5': '#ee6666', // 战略权威
+                            'L4': '#fac858', // 技术裁判
+                            'L3': '#91cc75', // Bot接口
+                            'L2': '#5470c6', // 活跃管理
+                            'L1': '#73c0de', // 纯执行
+                            'L0': '#d3d3d3'  // 无活动
+                        };
+                        return colors[layer] || '#999';
+                    }
+                },
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: (params) => {
+                        const value = params.value;
+                        if (value === Infinity) return '∞';
+                        return value.toFixed(2);
+                    }
+                }
+            }]
+        };
+        hubScoreChart.setOption(hubScoreOption);
+        
+        // Chart 2: Bot Tags Pie Chart
+        const botTagsChart = echarts.init(document.getElementById('botTagsChart'));
+        const botTagsOption = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c} bots ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                data: botTagsData.map(item => item.name)
+            },
+            series: [{
+                name: 'Bot Tags',
+                type: 'pie',
+                radius: '60%',
+                data: botTagsData,
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        };
+        botTagsChart.setOption(botTagsOption);
+        
+        // Chart 3: Network Graph
+        const networkGraph = echarts.init(document.getElementById('networkGraph'));
+        const networkOption = {
+            tooltip: {
+                formatter: (params) => {
+                    if (params.dataType === 'node') {
+                        return `${params.data.name}<br/>Type: ${params.data.category}<br/>Degree: ${params.data.value || 0}`;
+                    } else {
+                        return `${params.data.source} → ${params.data.target}<br/>Weight: ${params.data.value || 1}`;
+                    }
+                }
+            },
+            legend: [{
+                data: networkData.categories.map(c => c.name),
+                orient: 'vertical',
+                left: 10,
+                top: 20
+            }],
+            series: [{
+                type: 'graph',
+                layout: 'force',
+                data: networkData.nodes,
+                links: networkData.links,
+                categories: networkData.categories,
+                roam: true,
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: '{b}',
+                    fontSize: 10
+                },
+                labelLayout: {
+                    hideOverlap: true
+                },
+                force: {
+                    repulsion: 150,
+                    edgeLength: 100,
+                    gravity: 0.1
+                },
+                emphasis: {
+                    focus: 'adjacency',
+                    lineStyle: {
+                        width: 5
+                    }
+                }
+            }]
+        };
+        networkGraph.setOption(networkOption);
+        
+        // Chart 4: Message Timeline
+        const timelineChart = echarts.init(document.getElementById('timelineChart'));
+        const timelineOption = {
+            tooltip: {
+                trigger: 'axis'
+            },
+            xAxis: {
+                type: 'category',
+                data: timelineData.dates,
+                axisLabel: {
+                    rotate: 45,
+                    fontSize: 10
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Messages'
+            },
+            series: [{
+                name: 'Message Count',
+                type: 'line',
+                data: timelineData.counts,
+                smooth: true,
+                areaStyle: {
+                    opacity: 0.3
+                },
+                itemStyle: {
+                    color: '#5470c6'
+                }
+            }]
+        };
+        timelineChart.setOption(timelineOption);
+        
+        // Responsive resize
+        window.addEventListener('resize', () => {
+            hubScoreChart.resize();
+            botTagsChart.resize();
+            networkGraph.resize();
+            timelineChart.resize();
+        });
+    </script>
+</body>
+</html>
