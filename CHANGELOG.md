@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.4] - 2026-03-20
+
+### Added
+- 🔌 **OCTO Adapter** — Connect to OCTO Internal IM platform (DMWork backend)
+- 💾 **Direct database connection** — MySQL support with 5-table sharding
+- 🌐 **Web UI integration** — OCTO platform available in configuration wizard
+- 🌍 **Multi-language OCTO support** — Chinese and English labels for database fields
+
+### Changed
+- 📝 **Secure configuration** — No hardcoded server addresses or credentials
+- 🔒 **Environment variable support** — Optional config via OCTO_DB_* variables
+- 📚 **Updated language packs** — Added OCTO-specific translations (en.json, zh.json)
+
+### Technical
+- `src/layer1/adapters/octo-adapter.ts` (270 lines) — New OCTO adapter
+- Updated `config-server.ts` — Added OCTO route support
+- Updated Web UI (HTML/JS/CSS) — OCTO configuration form
+- 127/127 tests passing (100%)
+
+### Security
+- ✅ No hardcoded credentials in code
+- ✅ No real server addresses in examples
+- ✅ User must provide all connection parameters
+- ✅ Supports environment variables for automation
+
+### Documentation
+- README updated with OCTO adapter usage
+- Example configuration for database connection
+
+---
+
 ## [1.1.3] - 2026-03-20
 
 ### Added

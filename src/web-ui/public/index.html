@@ -36,6 +36,7 @@
           <select id="adapterType">
             <option value="discord">Discord (API)</option>
             <option value="github">GitHub (GraphQL)</option>
+            <option value="octo">OCTO (Internal IM)</option>
           </select>
         </div>
         
@@ -51,10 +52,126 @@
         </div>
         
         <div id="github-config" class="adapter-config" style="display: none;">
+        
+        <div id="octo-config" class="adapter-config" style="display: none;">
           <div class="form-group">
-            <label for="github-token" data-i18n="step1.github_token">Personal Access Token</label>
-            <input type="password" id="github-token" data-i18n-placeholder="step1.github_token_placeholder" placeholder="ghp_xxxxx">
+            <label for="octo-host" data-i18n="step1.octo_host">Database Host</label>
+            <input type="text" id="octo-host" data-i18n-placeholder="step1.octo_host_placeholder" placeholder="example.com">
           </div>
+          <div class="form-group">
+            <label for="octo-port" data-i18n="step1.octo_port">Database Port</label>
+            <input type="number" id="octo-port" value="3306">
+          </div>
+          <div class="form-group">
+            <label for="octo-user" data-i18n="step1.octo_user">Database User</label>
+            <input type="text" id="octo-user" data-i18n-placeholder="step1.octo_user_placeholder" placeholder="readonly_user">
+          </div>
+          <div class="form-group">
+            <label for="octo-password" data-i18n="step1.octo_password">Database Password</label>
+            <input type="password" id="octo-password" data-i18n-placeholder="step1.octo_password_placeholder" placeholder="your-password">
+          </div>
+          <div class="form-group">
+            <label for="octo-database" data-i18n="step1.octo_database">Database Name</label>
+            <input type="text" id="octo-database" value="im">
+          </div>
+        </div>
+          <div class="form-group">
+        
+        <div id="octo-config" class="adapter-config" style="display: none;">
+          <div class="form-group">
+            <label for="octo-host" data-i18n="step1.octo_host">Database Host</label>
+            <input type="text" id="octo-host" data-i18n-placeholder="step1.octo_host_placeholder" placeholder="example.com">
+          </div>
+          <div class="form-group">
+            <label for="octo-port" data-i18n="step1.octo_port">Database Port</label>
+            <input type="number" id="octo-port" value="3306">
+          </div>
+          <div class="form-group">
+            <label for="octo-user" data-i18n="step1.octo_user">Database User</label>
+            <input type="text" id="octo-user" data-i18n-placeholder="step1.octo_user_placeholder" placeholder="readonly_user">
+          </div>
+          <div class="form-group">
+            <label for="octo-password" data-i18n="step1.octo_password">Database Password</label>
+            <input type="password" id="octo-password" data-i18n-placeholder="step1.octo_password_placeholder" placeholder="your-password">
+          </div>
+          <div class="form-group">
+            <label for="octo-database" data-i18n="step1.octo_database">Database Name</label>
+            <input type="text" id="octo-database" value="im">
+          </div>
+        </div>
+            <label for="github-token" data-i18n="step1.github_token">Personal Access Token</label>
+        
+        <div id="octo-config" class="adapter-config" style="display: none;">
+          <div class="form-group">
+            <label for="octo-host" data-i18n="step1.octo_host">Database Host</label>
+            <input type="text" id="octo-host" data-i18n-placeholder="step1.octo_host_placeholder" placeholder="example.com">
+          </div>
+          <div class="form-group">
+            <label for="octo-port" data-i18n="step1.octo_port">Database Port</label>
+            <input type="number" id="octo-port" value="3306">
+          </div>
+          <div class="form-group">
+            <label for="octo-user" data-i18n="step1.octo_user">Database User</label>
+            <input type="text" id="octo-user" data-i18n-placeholder="step1.octo_user_placeholder" placeholder="readonly_user">
+          </div>
+          <div class="form-group">
+            <label for="octo-password" data-i18n="step1.octo_password">Database Password</label>
+            <input type="password" id="octo-password" data-i18n-placeholder="step1.octo_password_placeholder" placeholder="your-password">
+          </div>
+          <div class="form-group">
+            <label for="octo-database" data-i18n="step1.octo_database">Database Name</label>
+            <input type="text" id="octo-database" value="im">
+          </div>
+        </div>
+            <input type="password" id="github-token" data-i18n-placeholder="step1.github_token_placeholder" placeholder="ghp_xxxxx">
+        
+        <div id="octo-config" class="adapter-config" style="display: none;">
+          <div class="form-group">
+            <label for="octo-host" data-i18n="step1.octo_host">Database Host</label>
+            <input type="text" id="octo-host" data-i18n-placeholder="step1.octo_host_placeholder" placeholder="example.com">
+          </div>
+          <div class="form-group">
+            <label for="octo-port" data-i18n="step1.octo_port">Database Port</label>
+            <input type="number" id="octo-port" value="3306">
+          </div>
+          <div class="form-group">
+            <label for="octo-user" data-i18n="step1.octo_user">Database User</label>
+            <input type="text" id="octo-user" data-i18n-placeholder="step1.octo_user_placeholder" placeholder="readonly_user">
+          </div>
+          <div class="form-group">
+            <label for="octo-password" data-i18n="step1.octo_password">Database Password</label>
+            <input type="password" id="octo-password" data-i18n-placeholder="step1.octo_password_placeholder" placeholder="your-password">
+          </div>
+          <div class="form-group">
+            <label for="octo-database" data-i18n="step1.octo_database">Database Name</label>
+            <input type="text" id="octo-database" value="im">
+          </div>
+        </div>
+          </div>
+
+        
+        <div id="octo-config" class="adapter-config" style="display: none;">
+          <div class="form-group">
+            <label for="octo-host" data-i18n="step1.octo_host">Database Host</label>
+            <input type="text" id="octo-host" data-i18n-placeholder="step1.octo_host_placeholder" placeholder="example.com">
+          </div>
+          <div class="form-group">
+            <label for="octo-port" data-i18n="step1.octo_port">Database Port</label>
+            <input type="number" id="octo-port" value="3306">
+          </div>
+          <div class="form-group">
+            <label for="octo-user" data-i18n="step1.octo_user">Database User</label>
+            <input type="text" id="octo-user" data-i18n-placeholder="step1.octo_user_placeholder" placeholder="readonly_user">
+          </div>
+          <div class="form-group">
+            <label for="octo-password" data-i18n="step1.octo_password">Database Password</label>
+            <input type="password" id="octo-password" data-i18n-placeholder="step1.octo_password_placeholder" placeholder="your-password">
+          </div>
+          <div class="form-group">
+            <label for="octo-database" data-i18n="step1.octo_database">Database Name</label>
+            <input type="text" id="octo-database" value="im">
+          </div>
+        </div>
           <div class="form-group">
             <label for="github-owner" data-i18n="step1.github_owner">Repository Owner</label>
             <input type="text" id="github-owner" data-i18n-placeholder="step1.github_owner_placeholder" placeholder="facebook">

@@ -83,15 +83,23 @@ const discordConfig = document.getElementById('discord-config');
 const githubConfig = document.getElementById('github-config');
 
 // Switch adapter type
+// Switch adapter type
 adapterTypeSelect.addEventListener('change', (e) => {
   currentAdapter = e.target.value;
   
+  // Hide all configs
+  discordConfig.style.display = 'none';
+  githubConfig.style.display = 'none';
+  const octoConfig = document.getElementById('octo-config');
+  if (octoConfig) octoConfig.style.display = 'none';
+  
+  // Show selected config
   if (currentAdapter === 'discord') {
     discordConfig.style.display = 'block';
-    githubConfig.style.display = 'none';
   } else if (currentAdapter === 'github') {
-    discordConfig.style.display = 'none';
     githubConfig.style.display = 'block';
+  } else if (currentAdapter === 'octo' && octoConfig) {
+    octoConfig.style.display = 'block';
   }
 });
 
@@ -198,6 +206,13 @@ document.getElementById('run-analysis').addEventListener('click', async () => {
 });
 
 // Helper Functions
+
+function formatDateRange(start, end) {
+  const startDate = new Date(start).toLocaleDateString();
+  const endDate = new Date(end).toLocaleDateString();
+  return `${startDate} - ${endDate}`;
+}
+// Helper Functions
 function getConfig() {
   const config = {
     adapter: currentAdapter,
@@ -216,13 +231,17 @@ function getConfig() {
     config.token = document.getElementById('github-token').value;
     config.owner = document.getElementById('github-owner').value;
     config.repo = document.getElementById('github-repo').value;
+  } else if (currentAdapter === 'octo') {
+    config.host = document.getElementById('octo-host').value;
+    config.port = parseInt(document.getElementById('octo-port').value) || 3306;
+    config.user = document.getElementById('octo-user').value;
+    config.password = document.getElementById('octo-password').value;
+    config.database = document.getElementById('octo-database').value;
+    const channels = document.getElementById('discord-channels').value; // Reuse channels input
+    if (channels) {
+      config.channelIds = channels.split(',').map(c => c.trim());
+    }
   }
   
   return config;
-}
-
-function formatDateRange(start, end) {
-  const startDate = new Date(start).toLocaleDateString();
-  const endDate = new Date(end).toLocaleDateString();
-  return `${startDate} - ${endDate}`;
 }

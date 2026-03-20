@@ -7,7 +7,7 @@
     "platform": "平台",
     "discord_token": "Bot Token",
     "discord_token_placeholder": "你的 Discord Bot Token",
-    "discord_guild": "Guild ID",
+    "discord_guild": "服务器 ID",
     "discord_guild_placeholder": "1234567890",
     "github_token": "个人访问令牌",
     "github_token_placeholder": "ghp_xxxxx",
@@ -15,6 +15,14 @@
     "github_owner_placeholder": "facebook",
     "github_repo": "仓库名称",
     "github_repo_placeholder": "react",
+    "octo_host": "数据库地址",
+    "octo_host_placeholder": "example.com",
+    "octo_port": "数据库端口",
+    "octo_user": "数据库用户",
+    "octo_user_placeholder": "readonly_user",
+    "octo_password": "数据库密码",
+    "octo_password_placeholder": "你的密码",
+    "octo_database": "数据库名称",
     "test_connection": "测试连接"
   },
   
@@ -41,11 +49,11 @@
   },
   
   "messages": {
-    "connecting": "测试连接中...",
+    "connecting": "正在测试连接...",
     "success": "✅ 连接成功！",
     "error": "❌ 连接失败：",
-    "previewing": "加载预览中...",
-    "analyzing": "运行分析中...",
+    "previewing": "正在加载预览...",
+    "analyzing": "正在运行分析...",
     "complete": "✅ 分析完成！Dashboard 已生成。"
   }
 }

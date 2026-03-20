@@ -15,6 +15,14 @@
     "github_owner_placeholder": "facebook",
     "github_repo": "Repository Name",
     "github_repo_placeholder": "react",
+    "octo_host": "Database Host",
+    "octo_host_placeholder": "example.com",
+    "octo_port": "Database Port",
+    "octo_user": "Database User",
+    "octo_user_placeholder": "readonly_user",
+    "octo_password": "Database Password",
+    "octo_password_placeholder": "your-password",
+    "octo_database": "Database Name",
     "test_connection": "Test Connection"
   },
   
