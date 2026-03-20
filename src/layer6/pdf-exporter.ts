@@ -1,0 +1,411 @@
+/**
+ * PDF Exporter
+ * 
+ * Generates professional PDF reports from NetworkGraph and metrics.
+ * Uses puppeteer to render HTML and convert to PDF.
+ */
+
+import puppeteer from 'puppeteer';
+import { NetworkGraph } from '../layer2/models';
+import { StructuredMetricsResult } from '../layer4/metrics-calculator';
+
+export interface PDFExportOptions {
+  title?: string;
+  author?: string;
+  includeCharts?: boolean;
+  pageSize?: 'A4' | 'Letter';
+  landscape?: boolean;
+}
+
+/**
+ * PDFExporter
+ * 
+ * @example
+ * ```typescript
+ * const exporter = new PDFExporter();
+ * 
+ * const pdfBuffer = await exporter.generate(graph, metrics, {
+ *   title: 'OCTO Team ONA Report',
+ *   author: 'Mayo',
+ *   includeCharts: true,
+ * });
+ * 
+ * fs.writeFileSync('report.pdf', pdfBuffer);
+ * ```
+ */
+export class PDFExporter {
+  /**
+   * Generate PDF report
+   * 
+   * @param graph - NetworkGraph data
+   * @param metrics - Structured metrics result
+   * @param options - Export options
+   * @returns PDF as Buffer
+   */
+  async generate(
+    graph: NetworkGraph,
+    metrics: StructuredMetricsResult,
+    options: PDFExportOptions = {}
+  ): Promise<Buffer> {
+    const {
+      title = 'ONA Report',
+      author = 'OCTO-ONA',
+      includeCharts = true,
+      pageSize = 'A4',
+      landscape = false,
+    } = options;
+    
+    // Build HTML content
+    const html = this.buildHTML(graph, metrics, { title, includeCharts });
+    
+    // Launch headless browser
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      
+      // Generate PDF
+      const pdfBuffer = await page.pdf({
+        format: pageSize,
+        landscape,
+        printBackground: true,
+        margin: {
+          top: '20mm',
+          right: '15mm',
+          bottom: '20mm',
+          left: '15mm',
+        },
+      });
+      
+      return Buffer.from(pdfBuffer);
+    } finally {
+      await browser.close();
+    }
+  }
+  
+  /**
+   * Build HTML content for PDF
+   */
+  private buildHTML(
+    graph: NetworkGraph,
+    metrics: StructuredMetricsResult,
+    options: { title: string; includeCharts: boolean }
+  ): string {
+    const { title } = options;
+    
+    return `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .cover {
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .cover h1 {
+      font-size: 48pt;
+      margin-bottom: 20px;
+    }
+    .cover .subtitle {
+      font-size: 18pt;
+      opacity: 0.9;
+    }
+    .cover .meta {
+      margin-top: 40px;
+      font-size: 12pt;
+    }
+    
+    .content {
+      padding: 20px;
+    }
+    h2 {
+      font-size: 20pt;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      color: #667eea;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 5px;
+    }
+    h3 {
+      font-size: 14pt;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #764ba2;
+    }
+    
+    .summary {
+      background: #f5f7fa;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .summary-item {
+      text-align: center;
+    }
+    .summary-item .value {
+      font-size: 24pt;
+      font-weight: bold;
+      color: #667eea;
+    }
+    .summary-item .label {
+      font-size: 10pt;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #667eea;
+      color: white;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    
+    .page-break {
+      page-break-after: always;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 9pt;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="cover">
+    <h1>${title}</h1>
+    <div class="subtitle">Organizational Network Analysis Report</div>
+    <div class="meta">
+      <div>Generated by OCTO-ONA v1.1</div>
+      <div>${new Date().toLocaleDateString('zh-CN')}</div>
+    </div>
+  </div>
+  
+  <div class="content">
+    
+    <h2>📊 Executive Summary</h2>
+    <div class="summary">
+      <h3>Network Overview</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="value">${graph.summary.total_nodes}</div>
+          <div class="label">Total Nodes</div>
+        </div>
+        <div class="summary-item">
+          <div class="value">${graph.summary.total_humans}</div>
+          <div class="label">Human Members</div>
+        </div>
+        <div class="summary-item">
+          <div class="value">${graph.summary.total_bots}</div>
+          <div class="label">AI Agents</div>
+        </div>
+        <div class="summary-item">
+          <div class="value">${graph.summary.total_edges}</div>
+          <div class="label">Connections</div>
+        </div>
+        <div class="summary-item">
+          <div class="value">${graph.summary.total_messages}</div>
+          <div class="label">Messages</div>
+        </div>
+        <div class="summary-item">
+          <div class="value">${Math.round((graph.end_time.getTime() - graph.start_time.getTime()) / 86400000)}</div>
+          <div class="label">Days Analyzed</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <h2>🏆 Hub Score Rankings (Top 10)</h2>
+    <p>Hub Score = Mentions Received / Messages Sent</p>
+    ${this.buildHubScoreTable(metrics)}
+    
+    <div class="page-break"></div>
+    
+    <h2>🎯 Connoisseurship Pyramid</h2>
+    ${this.buildConnoisseurshipTable(metrics)}
+    
+    <div class="page-break"></div>
+    
+    <h2>📈 Network Metrics</h2>
+    ${this.buildNetworkMetricsTable(metrics)}
+    
+    <div class="page-break"></div>
+    
+    <h2>🤖 Bot Effectiveness</h2>
+    ${this.buildBotTable(metrics)}
+    
+    <div class="footer">
+      Generated by OCTO-ONA v1.1 | ${new Date().toISOString()}
+    </div>
+    
+  </div>
+  
+</body>
+</html>
+    `;
+  }
+  
+  private buildHubScoreTable(metrics: StructuredMetricsResult): string {
+    const topNodes = metrics.nodeMetrics
+      .sort((a, b) => b.hubScore - a.hubScore)
+      .slice(0, 10);
+    
+    return `
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Hub Score</th>
+            <th>Layer</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${topNodes.map((node, idx) => `
+            <tr>
+              <td>${idx + 1}</td>
+              <td>${node.name}</td>
+              <td>${node.type === 'human' ? '👤 Human' : '🤖 Bot'}</td>
+              <td>${node.hubScore === Infinity ? '∞' : node.hubScore.toFixed(2)}</td>
+              <td>L${node.connoisseurshipLayer}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+  
+  private buildConnoisseurshipTable(metrics: StructuredMetricsResult): string {
+    const layers = [
+      { layer: 5, label: 'L5 - 绝对权威', count: 0 },
+      { layer: 4, label: 'L4 - 核心品鉴家', count: 0 },
+      { layer: 3, label: 'L3 - 活跃贡献者', count: 0 },
+      { layer: 2, label: 'L2 - 一般参与者', count: 0 },
+      { layer: 1, label: 'L1 - 边缘成员', count: 0 },
+      { layer: 0, label: 'L0 - 无影响力', count: 0 },
+    ];
+    
+    for (const node of metrics.nodeMetrics) {
+      const layerIdx = layers.findIndex(l => l.layer === node.connoisseurshipLayer);
+      if (layerIdx >= 0) layers[layerIdx].count++;
+    }
+    
+    return `
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Count</th>
+            <th>Percentage</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${layers.map(layer => `
+            <tr>
+              <td>${layer.label}</td>
+              <td>${layer.count}</td>
+              <td>${((layer.count / metrics.nodeMetrics.length) * 100).toFixed(1)}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+  
+  private buildNetworkMetricsTable(metrics: StructuredMetricsResult): string {
+    return `
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Network Density</td>
+            <td>${(metrics.networkMetrics.density * 100).toFixed(2)}%</td>
+          </tr>
+          <tr>
+            <td>Average Clustering Coefficient</td>
+            <td>${metrics.networkMetrics.avgClusteringCoefficient.toFixed(3)}</td>
+          </tr>
+          <tr>
+            <td>Modularity (Communities)</td>
+            <td>${metrics.networkMetrics.modularity.toFixed(3)}</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+  }
+  
+  private buildBotTable(metrics: StructuredMetricsResult): string {
+    const bots = metrics.botMetrics;
+    
+    return `
+      <table>
+        <thead>
+          <tr>
+            <th>Bot Name</th>
+            <th>Functional Tags</th>
+            <th>Hub Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${bots.map(bot => `
+            <tr>
+              <td>${bot.name}</td>
+              <td>${bot.functionalTags.join(', ') || 'N/A'}</td>
+              <td>${bot.hubScore === Infinity ? '∞' : bot.hubScore.toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+}

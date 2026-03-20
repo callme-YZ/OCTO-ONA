@@ -208,3 +208,138 @@ export class MetricsCalculator {
     return JSON.stringify(output, null, 2);
   }
 }
+
+// ============================================
+// Structured Results Interface
+// ============================================
+
+/**
+ * Node-level metrics
+ */
+export interface NodeMetrics {
+  id: string;
+  name: string;
+  type: 'human' | 'bot';
+  hubScore: number;
+  connoisseurshipLayer: number;
+  degreeCentrality: number;
+  betweennessCentrality: number;
+  eigenvectorCentrality: number;
+  clusteringCoefficient: number;
+  community?: number;
+}
+
+/**
+ * Network-level metrics
+ */
+export interface NetworkMetrics {
+  density: number;
+  avgClusteringCoefficient: number;
+  modularity: number;
+  communities: number[];
+  avgPathLength?: number;
+}
+
+/**
+ * Bot-specific metrics
+ */
+export interface BotMetrics {
+  id: string;
+  name: string;
+  functionalTags: string[];
+  hubScore: number;
+  responseTime?: number;
+}
+
+/**
+ * Structured metrics result
+ */
+export interface StructuredMetricsResult {
+  nodeMetrics: NodeMetrics[];
+  networkMetrics: NetworkMetrics;
+  botMetrics: BotMetrics[];
+  timestamp: Date;
+}
+
+/**
+ * Get structured metrics result
+ * 
+ * Organizes MetricResult[] into a structured object for easy consumption by exporters.
+ * 
+ * @param results - Array of MetricResult from calculateAll()
+ * @returns Structured metrics organized by category
+ */
+export function getStructuredMetrics(
+  graph: NetworkGraph,
+  results: MetricResult[]
+): StructuredMetricsResult {
+  const nodeMetrics: NodeMetrics[] = [];
+  const networkMetrics: Partial<NetworkMetrics> = {};
+  const botMetrics: BotMetrics[] = [];
+  
+  // Extract metric values by ID
+  const metricMap = new Map<string, MetricValue>();
+  for (const result of results) {
+    metricMap.set(result.metricId, result.value);
+  }
+  
+  // Build node metrics
+  const hubScoreMap = metricMap.get('L3.1_hub_score') as Record<string, number> || {};
+  const connoisseurshipMap = metricMap.get('L3.2_connoisseurship_layer') as Record<string, number> || {};
+  const degreeMap = metricMap.get('L1.1_degree_centrality') as Record<string, number> || {};
+  const betweennessMap = metricMap.get('L1.2_betweenness_centrality') as Record<string, number> || {};
+  const eigenvectorMap = metricMap.get('L1.3_eigenvector_centrality') as Record<string, number> || {};
+  const clusteringMap = metricMap.get('L1.7_clustering_coefficient') as Record<string, number> || {};
+  
+  // Human nodes
+  for (const human of graph.human_nodes) {
+    nodeMetrics.push({
+      id: human.id,
+      name: human.name,
+      type: 'human',
+      hubScore: hubScoreMap[human.id] ?? 0,
+      connoisseurshipLayer: connoisseurshipMap[human.id] ?? 0,
+      degreeCentrality: degreeMap[human.id] ?? 0,
+      betweennessCentrality: betweennessMap[human.id] ?? 0,
+      eigenvectorCentrality: eigenvectorMap[human.id] ?? 0,
+      clusteringCoefficient: clusteringMap[human.id] ?? 0,
+    });
+  }
+  
+  // Bot nodes
+  const botTagsMap = metricMap.get('T_all_bot_tags') as Record<string, string[]> || {};
+  
+  for (const bot of graph.ai_agent_nodes) {
+    nodeMetrics.push({
+      id: bot.id,
+      name: bot.bot_name,
+      type: 'bot',
+      hubScore: hubScoreMap[bot.id] ?? 0,
+      connoisseurshipLayer: connoisseurshipMap[bot.id] ?? 0,
+      degreeCentrality: degreeMap[bot.id] ?? 0,
+      betweennessCentrality: betweennessMap[bot.id] ?? 0,
+      eigenvectorCentrality: eigenvectorMap[bot.id] ?? 0,
+      clusteringCoefficient: clusteringMap[bot.id] ?? 0,
+    });
+    
+    botMetrics.push({
+      id: bot.id,
+      name: bot.bot_name,
+      functionalTags: botTagsMap[bot.id] || bot.functional_tags || [],
+      hubScore: hubScoreMap[bot.id] ?? 0,
+    });
+  }
+  
+  // Build network metrics
+  networkMetrics.density = metricMap.get('L1.4_network_density') as number ?? 0;
+  networkMetrics.avgClusteringCoefficient = metricMap.get('L1.5_avg_clustering') as number ?? 0;
+  networkMetrics.modularity = metricMap.get('L1.6_modularity') as number ?? 0;
+  networkMetrics.communities = (metricMap.get('L1.6_modularity') as unknown as number[]) ?? [];
+  
+  return {
+    nodeMetrics,
+    networkMetrics: networkMetrics as NetworkMetrics,
+    botMetrics,
+    timestamp: new Date(),
+  };
+}

@@ -19,11 +19,15 @@
   "author": "YZ",
   "license": "MIT",
   "dependencies": {
+    "@types/express": "^5.0.6",
     "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
     "graphology": "^0.25.4",
     "graphology-communities-louvain": "^2.0.2",
     "graphology-metrics": "^2.3.0",
     "mysql2": "^3.11.5",
+    "puppeteer": "^24.40.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
