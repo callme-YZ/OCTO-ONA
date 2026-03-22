@@ -88,7 +88,7 @@ export class DashboardGenerator {
   }
   
   /**
-   * Generate dashboard HTML
+   * Generate dashboard HTML (inline data mode)
    * 
    * @param outputPath - Path to save HTML file
    */
@@ -110,6 +110,40 @@ export class DashboardGenerator {
     
     console.log(`Dashboard generated: ${outputPath}`);
     console.log(`File size: ${(html.length / 1024).toFixed(2)} KB`);
+  }
+  
+  /**
+   * Generate dashboard with external data loading
+   * 
+   * @param outputDir - Directory to save index.html and data.json
+   */
+  async generateWithExternalData(outputDir: string): Promise<void> {
+    console.log('Generating dashboard with external data...');
+    
+    // Ensure output directory exists
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    
+    // Prepare data
+    const data = await this.prepareDashboardData();
+    
+    // Write data.json
+    const dataPath = path.join(outputDir, 'data.json');
+    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2), 'utf-8');
+    
+    // Load external template
+    const templatePath = path.join(__dirname, 'dashboard-template-external.html');
+    const html = fs.readFileSync(templatePath, 'utf-8');
+    
+    // Write index.html
+    const htmlPath = path.join(outputDir, 'index.html');
+    fs.writeFileSync(htmlPath, html, 'utf-8');
+    
+    console.log(`Dashboard generated: ${outputDir}`);
+    console.log(`  - index.html: ${(html.length / 1024).toFixed(2)} KB`);
+    console.log(`  - data.json: ${(JSON.stringify(data).length / 1024).toFixed(2)} KB`);
+    console.log('\n✅ Open index.html in your browser to view the dashboard.');
   }
   
   /**

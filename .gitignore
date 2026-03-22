@@ -45,3 +45,8 @@ real-*.csv
 # Test data with real information
 tests/fixtures/real-*
 examples/real-*
+
+# Demo outputs
+demo-dashboard.html
+demo-dashboard-external/
+e2e-dashboard.html

@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && npm run copy-static",
-    "copy-static": "mkdir -p dist/web-ui/public && cp -r src/web-ui/public/* dist/web-ui/public/",
+    "copy-static": "mkdir -p dist/web-ui/public dist/layer6 && cp -r src/web-ui/public/* dist/web-ui/public/ && cp src/layer6/*.html dist/layer6/",
     "start:ui": "npm run build && node dist/web-ui/start-server.js",
     "dev": "ts-node src/index.ts",
     "dev:ui": "ts-node src/web-ui/start-server.ts",

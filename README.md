@@ -947,3 +947,48 @@ MIT许可证 - 详见 [LICENSE](LICENSE)
 
 **Version:** 0.8.0  
 **Last Updated:** 2026-03-20
+
+---
+
+### v1.2 Features - External Data Loading
+
+OCTO-ONA now supports two dashboard generation modes:
+
+#### 1. Inline Data Mode (Original)
+Single HTML file with all data embedded:
+```typescript
+const generator = new DashboardGenerator(graph);
+await generator.generate('./dashboard.html');
+```
+
+#### 2. External Data Mode (New!)
+Separate HTML and JSON files:
+```typescript
+const generator = new DashboardGenerator(graph);
+await generator.generateWithExternalData('./dashboard-dir');
+// Creates:
+//   dashboard-dir/index.html  (16KB - presentation only)
+//   dashboard-dir/data.json   (4KB - all metrics data)
+```
+
+**Benefits of external data mode:**
+- ✅ **Separation of concerns** - HTML for presentation, JSON for data
+- ✅ **Dynamic updates** - Update `data.json` without regenerating HTML
+- ✅ **Version control friendly** - Easier to diff data changes
+- ✅ **Smaller file sizes** - HTML is ~16KB vs ~200KB+ inline mode
+- ✅ **RESTful architecture** - Can serve `data.json` via API
+
+**Example:**
+```bash
+# Generate demo with external data
+npx ts-node examples/dashboard-demo-external.ts
+
+# View in browser
+open demo-dashboard-external/index.html
+```
+
+The HTML uses `fetch('./data.json')` to load data at runtime, making it perfect for:
+- CI/CD pipelines (update data without redeploying HTML)
+- Multi-environment dashboards (same HTML, different data.json)
+- Progressive web apps (cache HTML, fetch latest data)
+

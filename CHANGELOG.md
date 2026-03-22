@@ -1,3 +1,25 @@
+## [1.2.0] - 2026-03-22
+
+### Added
+- **External Data Loading for Dashboards** - New `generateWithExternalData()` method
+  - Generates separate `index.html` and `data.json` files
+  - HTML uses `fetch('./data.json')` to load data at runtime
+  - Enables separation of presentation and data
+  - Smaller file sizes (~16KB HTML vs ~200KB+ inline mode)
+  - Better for version control, CI/CD, and multi-environment deployments
+
+### Changed
+- DashboardGenerator now supports two modes:
+  - `generate(outputPath)` - Original inline data mode (backward compatible)
+  - `generateWithExternalData(outputDir)` - New external data mode
+
+### Examples
+- Added `examples/dashboard-demo-external.ts` demonstrating new feature
+
+### Documentation
+- Updated README.md with v1.2 features section
+- Added benefits and use cases for external data mode
+
 # Changelog
 
 All notable changes to OCTO-ONA will be documented in this file.
