@@ -28,6 +28,13 @@ export const HumanNodeSchema = z.object({
   email: z.string().email().optional().describe("Email address"),
   timezone: z.string().optional().describe("Timezone"),
   
+  // Connoisseurship metrics (Layer 3 annotations) - v1.3.0
+  connoisseurshipDensity: z.number().optional().describe("Connoisseurship Density = connoisseurship messages / total sent"),
+  connoisseurshipDrivingForce: z.number().optional().describe("Connoisseurship Driving Force = responded / total connoisseurships"),
+  connoisseurshipSpan: z.number().optional().describe("Connoisseurship Span = unique lobsters engaged"),
+  connoisseurshipPower: z.number().optional().describe("Connoisseurship Power = density × driving force × log2(span+1)"),
+  socialCentrality: z.number().optional().describe("Social Centrality (formerly Hub Score) = mentions received / messages sent"),
+  
   // Metadata
   type: z.literal("human").default("human").describe("Node type marker"),
   created_at: z.coerce.date().optional().describe("Account creation time"),

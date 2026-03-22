@@ -469,4 +469,159 @@ export class AnalysisEngine {
     
     return summary.sort((a, b) => b.size - a.size); // Sort by size descending
   }
+  
+  // ============================================
+  // Connoisseurship Score System (v1.3.0)
+  // ============================================
+  
+  /**
+   * Calculate new connoisseurship metrics for all users
+   * 
+   * Replaces Hub Score with 4-metric system:
+   * - Connoisseurship Density
+   * - Connoisseurship Driving Force
+   * - Connoisseurship Span
+   * - Connoisseurship Power
+   * 
+   * Also calculates Social Centrality (formerly Hub Score).
+   * 
+   * @returns Record<uid, metrics>
+   */
+  calculateConnoisseurshipMetrics(): Record<string, {
+    density: number;
+    drivingForce: number;
+    span: number;
+    power: number;
+    socialCentrality: number;
+  }> {
+    const { ConnoisseurshipScoreCalculator } = require('./connoisseurship-score');
+    
+    if (!this.networkGraph.messages) {
+      console.warn('No messages available for connoisseurship calculation');
+      return {};
+    }
+    
+    // Get bot UIDs
+    const botUids = this.networkGraph.ai_agent_nodes.map(node => node.id);
+    
+    // Create calculator
+    const calculator = new ConnoisseurshipScoreCalculator(
+      this.networkGraph.messages,
+      botUids
+    );
+    
+    // Calculate all metrics
+    const allMetrics = calculator.calculateAllMetrics();
+    
+    // Also calculate social centrality (Hub Score)
+    const hubScores = this.calculateHubScore();
+    
+    // Merge results
+    const results: Record<string, {
+      density: number;
+      drivingForce: number;
+      span: number;
+      power: number;
+      socialCentrality: number;
+    }> = {};
+    
+    for (const uid of Object.keys(allMetrics)) {
+      const metrics = allMetrics[uid];
+      const hubScore = hubScores[uid] || 0.0;
+      
+      results[uid] = {
+        density: metrics.density,
+        drivingForce: metrics.drivingForce,
+        span: metrics.span,
+        power: metrics.power,
+        socialCentrality: hubScore,
+      };
+    }
+    
+    console.log(`Calculated connoisseurship metrics for ${Object.keys(results).length} users`);
+    return results;
+  }
+  
+  /**
+   * Get top users by connoisseurship power
+   * 
+   * @param limit - Number of top users to return
+   * @returns Array of [uid, power, socialCentrality]
+   */
+  getTopByConnoisseurshipPower(limit: number = 10): Array<[string, number, number]> {
+    const metrics = this.calculateConnoisseurshipMetrics();
+    
+    return Object.entries(metrics)
+      .map(([uid, m]) => [uid, m.power, m.socialCentrality] as [string, number, number])
+      .sort((a, b) => b[1] - a[1]) // Sort by power descending
+      .slice(0, limit);
+  }
+  
+  /**
+   * Verify connoisseurship system correctness
+   * 
+   * Checks:
+   * 1. All bots have power = 0
+   * 2. Power rankings differ from social centrality rankings
+   * 
+   * @returns Verification report
+   */
+  verifyConnoisseurshipSystem(): {
+    allBotsZeroPower: boolean;
+    botPowerDetails: Record<string, number>;
+    rankingsDiffer: boolean;
+    topByPower: string[];
+    topBySocialCentrality: string[];
+  } {
+    const { ConnoisseurshipScoreCalculator } = require('./connoisseurship-score');
+    
+    if (!this.networkGraph.messages) {
+      return {
+        allBotsZeroPower: true,
+        botPowerDetails: {},
+        rankingsDiffer: false,
+        topByPower: [],
+        topBySocialCentrality: [],
+      };
+    }
+    
+    const botUids = this.networkGraph.ai_agent_nodes.map(node => node.id);
+    const calculator = new ConnoisseurshipScoreCalculator(
+      this.networkGraph.messages,
+      botUids
+    );
+    
+    // Check bots have zero power
+    const { allBotsZero, botMetrics } = calculator.verifyBotsHaveZeroPower();
+    
+    // Get rankings
+    const metrics = this.calculateConnoisseurshipMetrics();
+    
+    const topByPower = Object.entries(metrics)
+      .sort((a, b) => b[1].power - a[1].power)
+      .slice(0, 10)
+      .map(([uid]) => uid);
+    
+    const topBySocialCentrality = Object.entries(metrics)
+      .sort((a, b) => {
+        // Handle Infinity
+        if (a[1].socialCentrality === Infinity && b[1].socialCentrality === Infinity) return 0;
+        if (a[1].socialCentrality === Infinity) return -1;
+        if (b[1].socialCentrality === Infinity) return 1;
+        return b[1].socialCentrality - a[1].socialCentrality;
+      })
+      .slice(0, 10)
+      .map(([uid]) => uid);
+    
+    // Check if rankings differ
+    const rankingsDiffer = JSON.stringify(topByPower) !== JSON.stringify(topBySocialCentrality);
+    
+    return {
+      allBotsZeroPower: allBotsZero,
+      botPowerDetails: botMetrics,
+      rankingsDiffer,
+      topByPower,
+      topBySocialCentrality,
+    };
+  }
 }

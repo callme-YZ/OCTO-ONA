@@ -1,3 +1,52 @@
+## [1.3.0] - 2026-03-22
+
+### Added
+- **New Connoisseurship Index System** - 4-metric replacement for Hub Score
+  - **Connoisseurship Density** = Connoisseurship Messages / Total Sent
+  - **Connoisseurship Driving Force** = Responded Connoisseurships / Total Connoisseurships
+  - **Connoisseurship Span** = Unique Lobsters Engaged
+  - **Connoisseurship Power** = Density × Driving Force × log2(Span + 1)
+  - New `ConnoisseurshipScoreCalculator` class in `src/layer3/connoisseurship-score.ts`
+  - Connoisseurship detection requires BOTH:
+    1. Response to bot message (previousMsg.sender.isBot === true)
+    2. Judgmental language (keyword matching via ConnoisseurDetector)
+
+### Changed
+- **Hub Score renamed to Social Centrality** - Preserves original metric
+  - `HumanNode.socialCentrality` (formerly `hubScore`)
+  - Parallel display with Connoisseurship Power
+  - Different ranking from connoisseurship metrics
+- **Data Model Extended** (Layer 2) - New optional fields in `HumanNode`:
+  - `connoisseurshipDensity?: number`
+  - `connoisseurshipDrivingForce?: number`
+  - `connoisseurshipSpan?: number`
+  - `connoisseurshipPower?: number`
+  - `socialCentrality?: number` (renamed from Hub Score)
+- **AnalysisEngine Enhanced** (Layer 3) - New methods:
+  - `calculateConnoisseurshipMetrics()` - Compute 4 metrics + social centrality
+  - `getTopByConnoisseurshipPower()` - Rank users by connoisseurship power
+  - `verifyConnoisseurshipSystem()` - Validation helper
+
+### Acceptance Criteria Met
+✅ 辉哥 (human) ranks top by Connoisseurship Power  
+✅ All bots have Connoisseurship Power = 0  
+✅ Power rankings ≠ Social Centrality rankings
+
+### Tests
+- 14 new unit tests in `tests/layer3.connoisseurship-score.test.ts`
+- All 141 existing tests pass
+- Edge cases covered: no messages, no bots, bot-only conversations
+
+### Migration Notes
+- Backward compatible - Hub Score still calculated
+- Social Centrality replaces Hub Score in new analyses
+- Old data models continue to work (new fields optional)
+
+### Technical
+- Pentland specification compliance
+- Message time-series analysis with context
+- 24-hour response window for driving force
+- Logarithmic span scaling for power metric
 ## [1.2.1] - 2026-03-22
 
 ### Added
