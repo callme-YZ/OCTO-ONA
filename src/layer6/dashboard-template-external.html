@@ -123,6 +123,9 @@
             color: #2c3e50;
             border-bottom: 2px solid #667eea;
             padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .chart {
@@ -132,6 +135,74 @@
         
         .chart.small {
             height: 300px;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-label {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .btn-group {
+            display: inline-flex;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .btn-group button {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #495057;
+            border-left: none;
+        }
+        
+        .btn-group button:first-child {
+            border-left: 1px solid #dee2e6;
+        }
+        
+        .btn-group button:hover {
+            background: #f8f9fa;
+        }
+        
+        .btn-group button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        select {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #495057;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
         }
         
         /* Table */
@@ -177,6 +248,11 @@
             .kpi-cards {
                 grid-template-columns: 1fr;
             }
+            
+            .controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -190,22 +266,67 @@
     </div>
     
     <script>
+        // Global variables
+        let dashboardData = null;
+        let hubScoreChart, botTagsChart, networkGraph, timelineChart;
+        let currentLayout = 'force';
+        let currentSortDimension = 'hubScore';
+        let nodesMetrics = [];
+        
         // Load data from external JSON file
         fetch('./data.json')
             .then(response => response.json())
             .then(data => {
                 console.log('Dashboard data loaded:', data);
-                renderDashboard(data);
+                dashboardData = data;
+                prepareMetrics();
+                renderDashboard();
             })
             .catch(error => {
                 console.error('Error loading dashboard data:', error);
                 document.getElementById('loading').textContent = 'Error loading data: ' + error.message;
             });
         
-        function renderDashboard(data) {
+        function prepareMetrics() {
+            // Calculate metrics for each node
+            const sentMessages = {};
+            const receivedMessages = {};
+            const groupCount = {};
+            
+            dashboardData.networkData.links.forEach(edge => {
+                sentMessages[edge.source] = (sentMessages[edge.source] || 0) + (edge.value || 1);
+                receivedMessages[edge.target] = (receivedMessages[edge.target] || 0) + (edge.value || 1);
+            });
+            
+            // Calculate group participation
+            dashboardData.networkData.nodes.forEach(node => {
+                const connections = new Set();
+                dashboardData.networkData.links.forEach(edge => {
+                    if (edge.source === node.id) connections.add(edge.target);
+                    if (edge.target === node.id) connections.add(edge.source);
+                });
+                groupCount[node.id] = connections.size;
+            });
+            
+            // Build metrics array
+            nodesMetrics = dashboardData.networkData.nodes.map(n => ({
+                id: n.id,
+                name: n.name,
+                hubScore: dashboardData.hubScoreData.names.includes(n.name) ? 
+                    dashboardData.hubScoreData.values[dashboardData.hubScoreData.names.indexOf(n.name)] : 0,
+                degree: n.value || 0,
+                sentMessages: sentMessages[n.id] || 0,
+                receivedMessages: receivedMessages[n.id] || 0,
+                groupCount: groupCount[n.id] || 0
+            }));
+        }
+        
+        function renderDashboard() {
             // Hide loading, show dashboard
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
+            
+            const data = dashboardData;
             
             // Render header
             const header = `
@@ -249,7 +370,21 @@
             const chartGrid = `
                 <div class="chart-grid">
                     <div class="chart-container">
-                        <div class="chart-title">🏆 Hub Score Rankings</div>
+                        <div class="chart-title">
+                            <span>🏆 Hub Score Rankings</span>
+                            <div class="controls">
+                                <div class="control-group">
+                                    <span class="control-label">Sort by:</span>
+                                    <select id="sortDimension">
+                                        <option value="hubScore">Hub Score</option>
+                                        <option value="sentMessages">Sent Messages</option>
+                                        <option value="receivedMessages">Received Messages</option>
+                                        <option value="degree">Node Degree</option>
+                                        <option value="groupCount">Group Count</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                         <div id="hubScoreChart" class="chart small"></div>
                     </div>
                     
@@ -259,7 +394,19 @@
                     </div>
                     
                     <div class="chart-container full-width">
-                        <div class="chart-title">🌐 Network Graph</div>
+                        <div class="chart-title">
+                            <span>🌐 Network Graph</span>
+                            <div class="controls">
+                                <div class="control-group">
+                                    <span class="control-label">Layout:</span>
+                                    <div class="btn-group">
+                                        <button id="layoutForce" class="active">Force</button>
+                                        <button id="layoutCircular">Circular</button>
+                                        <button id="layoutRadial">Radial</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div id="networkGraph" class="chart"></div>
                     </div>
                     
@@ -312,13 +459,64 @@
             });
             
             // Render charts
-            renderCharts(data);
+            renderCharts();
+            
+            // Setup event listeners
+            setupEventListeners();
         }
         
-        function renderCharts(data) {
-            // Chart 1: Hub Score Bar Chart
-            const hubScoreChart = echarts.init(document.getElementById('hubScoreChart'));
-            const hubScoreOption = {
+        function renderCharts() {
+            renderHubScoreChart();
+            renderBotTagsChart();
+            renderNetworkGraph();
+            renderTimelineChart();
+            
+            // Responsive resize
+            window.addEventListener('resize', () => {
+                hubScoreChart.resize();
+                botTagsChart.resize();
+                networkGraph.resize();
+                timelineChart.resize();
+            });
+        }
+        
+        function renderHubScoreChart() {
+            hubScoreChart = echarts.init(document.getElementById('hubScoreChart'));
+            updateHubScoreChart();
+        }
+        
+        function updateHubScoreChart() {
+            const sorted = [...nodesMetrics].sort((a, b) => {
+                const aVal = a[currentSortDimension];
+                const bVal = b[currentSortDimension];
+                if (aVal === 9999 && bVal === 9999) return 0;
+                if (aVal === 9999) return -1;
+                if (bVal === 9999) return 1;
+                return bVal - aVal;
+            }).slice(0, 10);
+            
+            const names = sorted.map(n => n.name);
+            const values = sorted.map(n => n[currentSortDimension]);
+            
+            const layers = sorted.map(n => {
+                const hubScore = n.hubScore;
+                if (hubScore >= 9999) return 'L5';
+                if (hubScore >= 5) return 'L4';
+                if (hubScore >= 2) return 'L3';
+                if (hubScore >= 1) return 'L2';
+                if (hubScore > 0) return 'L1';
+                return 'L0';
+            });
+            
+            const dimensionLabels = {
+                hubScore: 'Hub Score',
+                sentMessages: 'Sent Messages',
+                receivedMessages: 'Received Messages',
+                degree: 'Node Degree',
+                groupCount: 'Group Count'
+            };
+            
+            const option = {
                 tooltip: {
                     trigger: 'axis',
                     axisPointer: { type: 'shadow' }
@@ -331,20 +529,20 @@
                 },
                 xAxis: {
                     type: 'value',
-                    name: 'Hub Score'
+                    name: dimensionLabels[currentSortDimension]
                 },
                 yAxis: {
                     type: 'category',
-                    data: data.hubScoreData.names,
+                    data: names,
                     axisLabel: { fontSize: 12 }
                 },
                 series: [{
-                    name: 'Hub Score',
+                    name: dimensionLabels[currentSortDimension],
                     type: 'bar',
-                    data: data.hubScoreData.values,
+                    data: values,
                     itemStyle: {
                         color: (params) => {
-                            const layer = data.hubScoreData.layers[params.dataIndex];
+                            const layer = layers[params.dataIndex];
                             const colors = {
                                 'L5': '#ee6666',
                                 'L4': '#fac858',
@@ -362,16 +560,18 @@
                         formatter: (params) => {
                             const value = params.value;
                             if (value === 9999) return '∞';
-                            return value.toFixed(2);
+                            return currentSortDimension === 'hubScore' ? value.toFixed(2) : value;
                         }
                     }
                 }]
             };
-            hubScoreChart.setOption(hubScoreOption);
             
-            // Chart 2: Bot Tags Pie Chart
-            const botTagsChart = echarts.init(document.getElementById('botTagsChart'));
-            const botTagsOption = {
+            hubScoreChart.setOption(option);
+        }
+        
+        function renderBotTagsChart() {
+            botTagsChart = echarts.init(document.getElementById('botTagsChart'));
+            const option = {
                 tooltip: {
                     trigger: 'item',
                     formatter: '{b}: {c} bots ({d}%)'
@@ -379,13 +579,13 @@
                 legend: {
                     orient: 'vertical',
                     left: 'left',
-                    data: data.botTagsData.map(item => item.name)
+                    data: dashboardData.botTagsData.map(item => item.name)
                 },
                 series: [{
                     name: 'Bot Tags',
                     type: 'pie',
                     radius: '60%',
-                    data: data.botTagsData,
+                    data: dashboardData.botTagsData,
                     emphasis: {
                         itemStyle: {
                             shadowBlur: 10,
@@ -395,11 +595,16 @@
                     }
                 }]
             };
-            botTagsChart.setOption(botTagsOption);
-            
-            // Chart 3: Network Graph
-            const networkGraph = echarts.init(document.getElementById('networkGraph'));
-            const networkOption = {
+            botTagsChart.setOption(option);
+        }
+        
+        function renderNetworkGraph() {
+            networkGraph = echarts.init(document.getElementById('networkGraph'));
+            updateNetworkGraph();
+        }
+        
+        function updateNetworkGraph() {
+            const baseOption = {
                 tooltip: {
                     formatter: (params) => {
                         if (params.dataType === 'node') {
@@ -410,17 +615,17 @@
                     }
                 },
                 legend: [{
-                    data: data.networkData.categories.map(c => c.name),
+                    data: dashboardData.networkData.categories.map(c => c.name),
                     orient: 'vertical',
                     left: 10,
                     top: 20
                 }],
                 series: [{
                     type: 'graph',
-                    layout: 'force',
-                    data: data.networkData.nodes,
-                    links: data.networkData.links,
-                    categories: data.networkData.categories,
+                    layout: currentLayout === 'force' ? 'force' : 'circular',
+                    data: dashboardData.networkData.nodes,
+                    links: dashboardData.networkData.links,
+                    categories: dashboardData.networkData.categories,
                     roam: true,
                     label: {
                         show: true,
@@ -431,11 +636,6 @@
                     labelLayout: {
                         hideOverlap: true
                     },
-                    force: {
-                        repulsion: 150,
-                        edgeLength: 100,
-                        gravity: 0.1
-                    },
                     emphasis: {
                         focus: 'adjacency',
                         lineStyle: {
@@ -444,17 +644,36 @@
                     }
                 }]
             };
-            networkGraph.setOption(networkOption);
             
-            // Chart 4: Message Timeline
-            const timelineChart = echarts.init(document.getElementById('timelineChart'));
-            const timelineOption = {
+            if (currentLayout === 'force') {
+                baseOption.series[0].force = {
+                    repulsion: 150,
+                    edgeLength: 100,
+                    gravity: 0.1
+                };
+            } else if (currentLayout === 'circular') {
+                baseOption.series[0].circular = {
+                    rotateLabel: true
+                };
+            } else if (currentLayout === 'radial') {
+                baseOption.series[0].layout = 'circular';
+                baseOption.series[0].circular = {
+                    rotateLabel: true
+                };
+            }
+            
+            networkGraph.setOption(baseOption, true);
+        }
+        
+        function renderTimelineChart() {
+            timelineChart = echarts.init(document.getElementById('timelineChart'));
+            const option = {
                 tooltip: {
                     trigger: 'axis'
                 },
                 xAxis: {
                     type: 'category',
-                    data: data.timelineData.dates,
+                    data: dashboardData.timelineData.dates,
                     axisLabel: {
                         rotate: 45,
                         fontSize: 10
@@ -467,7 +686,7 @@
                 series: [{
                     name: 'Message Count',
                     type: 'line',
-                    data: data.timelineData.counts,
+                    data: dashboardData.timelineData.counts,
                     smooth: true,
                     areaStyle: {
                         opacity: 0.3
@@ -477,14 +696,36 @@
                     }
                 }]
             };
-            timelineChart.setOption(timelineOption);
+            timelineChart.setOption(option);
+        }
+        
+        function setupEventListeners() {
+            // Layout switching
+            document.getElementById('layoutForce').addEventListener('click', () => {
+                currentLayout = 'force';
+                document.querySelectorAll('.btn-group button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('layoutForce').classList.add('active');
+                updateNetworkGraph();
+            });
             
-            // Responsive resize
-            window.addEventListener('resize', () => {
-                hubScoreChart.resize();
-                botTagsChart.resize();
-                networkGraph.resize();
-                timelineChart.resize();
+            document.getElementById('layoutCircular').addEventListener('click', () => {
+                currentLayout = 'circular';
+                document.querySelectorAll('.btn-group button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('layoutCircular').classList.add('active');
+                updateNetworkGraph();
+            });
+            
+            document.getElementById('layoutRadial').addEventListener('click', () => {
+                currentLayout = 'radial';
+                document.querySelectorAll('.btn-group button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('layoutRadial').classList.add('active');
+                updateNetworkGraph();
+            });
+            
+            // Sort dimension switching
+            document.getElementById('sortDimension').addEventListener('change', (e) => {
+                currentSortDimension = e.target.value;
+                updateHubScoreChart();
             });
         }
     </script>

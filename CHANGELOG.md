@@ -1,3 +1,39 @@
+## [1.2.1] - 2026-03-22
+
+### Added
+- **Interactive Dashboard Controls** - Enhanced user interaction
+  - **Network Graph Layout Switching**:
+    - Force-directed layout (default) - Physics-based node positioning
+    - Circular layout - Nodes arranged in a circle
+    - Radial layout - Central node with radial distribution
+    - Easy toggle via button group in graph header
+  - **Node Ranking Sort Dimensions**:
+    - Hub Score (被@数/发送数) - Default ONA metric
+    - Sent Messages - Total messages sent by node
+    - Received Messages - Total messages received (被提及数)
+    - Node Degree - Total connections
+    - Group Count - Number of unique groups participated
+    - Interactive dropdown selector in rankings chart
+
+### Changed
+- `dashboard-template.html` - Added controls and interactive logic
+- `dashboard-template-external.html` - Synced with inline template
+- Chart titles now flex containers to accommodate controls
+- Added responsive CSS for mobile devices
+
+### Technical
+- ECharts 5.x layout API integration
+- Dynamic chart re-rendering on layout/dimension change
+- Client-side metrics calculation from network data
+- ~6KB additional JavaScript for interactivity
+- No breaking changes - backward compatible
+
+### UX Improvements
+- Visual feedback for active layout/sort selection
+- Smooth transitions between layouts
+- Color-coded rankings by connoisseur layer
+- Consistent styling across all controls
+
 ## [1.2.0] - 2026-03-22
 
 ### Added
