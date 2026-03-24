@@ -50,3 +50,4 @@ examples/real-*
 demo-dashboard.html
 demo-dashboard-external/
 e2e-dashboard.html
+octo-remote.config.json
