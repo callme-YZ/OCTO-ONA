@@ -45,6 +45,7 @@ interface PayloadData {
 
 export class DMWorkAdapter extends BaseAdapter {
   private pool: mysql.Pool;
+  private groupMemberCache: Map<string, string[]> = new Map();
   
   constructor(config: DMWorkConfig) {
     super(config);
@@ -88,7 +89,7 @@ export class DMWorkAdapter extends BaseAdapter {
       id: user.uid,
       name: user.name,
       is_bot: Boolean(user.robot),
-      email: user.email || undefined,
+      email: (user.email && user.email.includes('@')) ? user.email : undefined,
       creator_uid: Boolean(user.robot) ? robotCreators.get(user.uid) : undefined,
     }));
     
@@ -118,12 +119,12 @@ export class DMWorkAdapter extends BaseAdapter {
       
       if (startTime) {
         query += ' AND created_at >= ?';
-        params.push(Math.floor(startTime.getTime() / 1000));
+        params.push(startTime);
       }
       
       if (endTime) {
         query += ' AND created_at <= ?';
-        params.push(Math.floor(endTime.getTime() / 1000));
+        params.push(endTime);
       }
       
       const [rows] = await this.pool.query<mysql.RowDataPacket[]>(query, params);
@@ -138,7 +139,7 @@ export class DMWorkAdapter extends BaseAdapter {
           from_uid: row.from_uid,
           to_uids: toUids,
           content: this._extractContent(row.payload),
-          timestamp: new Date(row.created_at * 1000),
+          timestamp: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
           context_id: row.channel_id,
         });
       }
@@ -179,14 +180,19 @@ export class DMWorkAdapter extends BaseAdapter {
       }
     }
     
-    // Source 2: If no mentions, infer from group context
+    // Source 2: If no mentions, infer from group context (with cache)
     if (toUids.length === 0 && msg.channel_id) {
-      const [members] = await this.pool.query<mysql.RowDataPacket[]>(
-        'SELECT uid FROM group_member WHERE group_no = ? AND uid != ? LIMIT 50',
-        [msg.channel_id, msg.from_uid]
-      );
+      let memberUids = this.groupMemberCache.get(msg.channel_id);
+      if (!memberUids) {
+        const [members] = await this.pool.query<mysql.RowDataPacket[]>(
+          'SELECT uid FROM group_member WHERE group_no = ? LIMIT 50',
+          [msg.channel_id]
+        );
+        memberUids = members.map(m => m.uid);
+        this.groupMemberCache.set(msg.channel_id, memberUids);
+      }
       
-      toUids.push(...members.map(m => m.uid));
+      toUids.push(...memberUids.filter(uid => uid !== msg.from_uid));
     }
     
     return toUids;

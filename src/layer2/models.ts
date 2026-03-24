@@ -25,7 +25,7 @@ export const HumanNodeSchema = z.object({
   team: z.string().optional().describe("Team affiliation (for Silo Index)"),
   
   // Contact (optional)
-  email: z.string().email().optional().describe("Email address"),
+  email: z.string().optional().describe("Email address"),
   timezone: z.string().optional().describe("Timezone"),
   
   // Connoisseurship metrics (Layer 3 annotations) - v1.3.0

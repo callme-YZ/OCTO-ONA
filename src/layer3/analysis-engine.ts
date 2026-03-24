@@ -72,13 +72,26 @@ export class AnalysisEngine {
       });
     }
     
-    // Add edges
+    // Add edges (skip if source or target node not found)
+    let skippedEdges = 0;
     for (const edge of this.networkGraph.edges) {
-      graph.addEdge(edge.source, edge.target, {
-        weight: edge.weight,
-        edge_type: edge.edge_type,
-        is_cross_team: edge.is_cross_team,
-      });
+      if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
+        try {
+          graph.addEdge(edge.source, edge.target, {
+            weight: edge.weight,
+            edge_type: edge.edge_type,
+            is_cross_team: edge.is_cross_team,
+          });
+        } catch (e) {
+          // Skip duplicate edges
+          skippedEdges++;
+        }
+      } else {
+        skippedEdges++;
+      }
+    }
+    if (skippedEdges > 0) {
+      console.log(`Skipped ${skippedEdges} edges (missing nodes or duplicates)`);
     }
     
     this.cache.graph = graph;
