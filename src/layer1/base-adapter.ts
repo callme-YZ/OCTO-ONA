@@ -105,7 +105,7 @@ export abstract class BaseAdapter {
           name: user.name,
           role: user.role,
           team: user.team,
-          email: user.email,
+          email: (user.email && user.email.includes('@')) ? user.email : undefined,
           type: 'human',
           created_at: user.created_at,
         });
