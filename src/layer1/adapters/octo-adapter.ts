@@ -321,11 +321,12 @@ export class OCTOAdapter {
     const messages: GraphMessage[] = dbMessages.map(msg => {
       // Extract original IDs (remove source prefix)
       const fromUid = msg.from_uid.replace(`${this.config.sourceId}:`, '');
-      const toUids = msg.mentioned_uids?.map((uid: string) => uid.replace(`${this.config.sourceId}:`, '')) || [];
+      let toUids = msg.mentioned_uids?.map((uid: string) => uid.replace(`${this.config.sourceId}:`, '')) || [];
       
       if (toUids.length === 0) {
-        // Fallback: broadcast to channel
-        toUids.push(msg.channel_id.replace(`${this.config.sourceId}:`, ''));
+        // Fallback: broadcast to all users in the channel (excluding sender)
+        // This is a simplified heuristic; real implementation may need channel membership
+        toUids = users.filter(u => u.id !== fromUid).map(u => u.id);
       }
 
       return {

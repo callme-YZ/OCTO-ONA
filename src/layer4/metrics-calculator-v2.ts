@@ -94,9 +94,9 @@ export class MetricsCalculator {
     if (this.metricsEngine) {
       try {
         const engineResult = await this.metricsEngine.computeMetric(metricId, { parameters });
-        return this.convertEngineResult(engineResult);
+        return await this.convertEngineResult(engineResult);
       } catch (error) {
-        console.warn(`[v2] Metric ${metricId} not found in DB, falling back to legacy`);
+        console.warn(`[v2] Metric ${metricId} not found in DB, falling back to legacy:`, (error as Error).message);
       }
     }
     
