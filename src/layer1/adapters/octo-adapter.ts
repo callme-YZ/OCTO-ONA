@@ -1,13 +1,18 @@
 /**
- * OCTO-ONA Layer 1: OCTO Adapter
+ * OCTO-ONA Layer 1: OCTO Adapter (v2.0)
  * 
  * Adapter for OCTO Internal IM platform (DMWork backend).
- * Connects directly to MySQL database and extracts network data.
+ * Supports 3 modes:
+ *   - remote: Direct remote DB access (legacy)
+ *   - local: Read from local cache
+ *   - sync: Sync remote → local
  */
 
 import mysql from 'mysql2/promise';
-import { NetworkGraph, Message } from '../../layer2/models';
+import { NetworkGraph, Message as GraphMessage } from '../../layer2/models';
 import { NetworkGraphBuilder } from '../network-graph-builder';
+import { LocalDatabase, LocalDatabaseConfig } from '../../database/local-database';
+import { User, Channel, Message as DBMessage } from '../../database/types';
 
 // ============================================
 // OCTO Specific Types
@@ -21,13 +26,20 @@ export interface OCTOConfig {
   database: string;
 }
 
+export interface OCTOAdapterConfig {
+  mode: 'remote' | 'local' | 'sync';
+  remoteConfig?: OCTOConfig;
+  localConfig?: LocalDatabaseConfig;
+  sourceId: string; // e.g., 'dmwork-octo'
+}
+
 export interface OCTOExtractionOptions {
   startTime?: Date;
   endTime?: Date;
   channelIds?: string[];
 }
 
-interface DBMessage {
+interface RemoteDBMessage {
   message_id: string;
   from_uid: string;
   channel_id: string;
@@ -44,9 +56,10 @@ interface PayloadData {
     message_id?: string;
     from_uid?: string;
   };
+  content?: string;
 }
 
-interface DBUser {
+interface RemoteDBUser {
   uid: string;
   name: string;
   username?: string;
@@ -54,50 +67,168 @@ interface DBUser {
   robot_version?: string;
 }
 
+interface RemoteDBChannel {
+  channel_id: string;
+  channel_type: number;
+}
+
 // ============================================
-// OCTOAdapter Class
+// OCTOAdapter Class (v2.0)
 // ============================================
 
 export class OCTOAdapter {
-  private pool?: mysql.Pool;
-  private config?: OCTOConfig;
+  private config: OCTOAdapterConfig;
+  private remotePool?: mysql.Pool;
+  private localDB?: LocalDatabase;
+
+  constructor(config: OCTOAdapterConfig) {
+    this.config = config;
+  }
 
   /**
-   * Connect to OCTO database
+   * Connect to database(s) based on mode
    */
-  async connect(config: OCTOConfig): Promise<void> {
-    this.config = config;
-    
-    this.pool = mysql.createPool({
-      host: config.host,
-      port: config.port,
-      user: config.user,
-      password: config.password,
-      database: config.database,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-    });
+  async connect(): Promise<void> {
+    if (this.config.mode === 'remote' || this.config.mode === 'sync') {
+      if (!this.config.remoteConfig) {
+        throw new Error('remoteConfig required for remote/sync mode');
+      }
 
-    // Test connection
-    try {
-      const connection = await this.pool.getConnection();
-      connection.release();
-    } catch (error) {
-      throw new Error(`Failed to connect to OCTO database: ${error instanceof Error ? error.message : String(error)}`);
+      this.remotePool = mysql.createPool({
+        ...this.config.remoteConfig,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      });
+
+      // Test connection
+      const conn = await this.remotePool.getConnection();
+      conn.release();
+    }
+
+    if (this.config.mode === 'local' || this.config.mode === 'sync') {
+      if (!this.config.localConfig) {
+        throw new Error('localConfig required for local/sync mode');
+      }
+
+      this.localDB = new LocalDatabase(this.config.localConfig);
+
+      // Ensure data source exists
+      await this.localDB.insertDataSource({
+        id: this.config.sourceId,
+        type: 'dmwork',
+        name: 'OCTO Internal IM',
+        config: this.config.remoteConfig || {},
+      });
     }
   }
 
   /**
-   * Extract network graph from OCTO database
+   * Sync data from remote to local
    */
-  async extractNetwork(options: OCTOExtractionOptions = {}): Promise<NetworkGraph> {
-    if (!this.pool) {
+  async syncToLocal(options: OCTOExtractionOptions = {}): Promise<void> {
+    if (this.config.mode !== 'sync') {
+      throw new Error('syncToLocal only available in sync mode');
+    }
+
+    if (!this.remotePool || !this.localDB) {
       throw new Error('Not connected. Call connect() first.');
     }
 
-    // Step 1: Extract users
-    const dbUsers = await this.extractUsers();
+    console.log('🔄 Syncing data from remote to local...');
+
+    // Step 1: Sync users
+    console.log('  📥 Syncing users...');
+    const remoteUsers = await this.extractRemoteUsers();
+    const localUsers: User[] = remoteUsers.map(u => ({
+      uid: `${this.config.sourceId}:${u.uid}`,
+      source_id: this.config.sourceId,
+      source_user_id: u.uid,
+      name: u.name,
+      display_name: u.username || u.name,
+      is_bot: u.robot === 1,
+      metadata: u.robot === 1 ? { creator_uid: u.robot_version } : {},
+    }));
+    await this.localDB.insertUsers(localUsers);
+    console.log(`  ✅ Synced ${localUsers.length} users`);
+
+    // Step 2: Sync channels
+    console.log('  📥 Syncing channels...');
+    const remoteChannels = await this.extractRemoteChannels();
+    const localChannels: Channel[] = remoteChannels.map(c => ({
+      channel_id: `${this.config.sourceId}:${c.channel_id}`,
+      source_id: this.config.sourceId,
+      source_channel_id: c.channel_id,
+      name: c.channel_id, // OCTO doesn't have channel names, use ID
+      type: c.channel_type === 1 ? 'dm' : 'group',
+    }));
+    await this.localDB.insertChannels(localChannels);
+    console.log(`  ✅ Synced ${localChannels.length} channels`);
+
+    // Step 3: Sync messages
+    console.log('  📥 Syncing messages...');
+    const remoteMessages = await this.extractRemoteMessages(options);
+    const localMessages: DBMessage[] = remoteMessages.map(msg => {
+      const payload = this.parsePayload(msg.payload);
+      const toUids = this.inferToUids(msg, payload);
+
+      return {
+        message_id: `${this.config.sourceId}:${msg.message_id}`,
+        source_id: this.config.sourceId,
+        source_message_id: msg.message_id,
+        channel_id: `${this.config.sourceId}:${msg.channel_id}`,
+        from_uid: `${this.config.sourceId}:${msg.from_uid}`,
+        content: payload.content || '',
+        timestamp: Math.floor(msg.created_at / 1000), // Convert ms to seconds
+        reply_to_message_id: payload.reply?.message_id
+          ? `${this.config.sourceId}:${payload.reply.message_id}`
+          : undefined,
+        reply_to_uid: payload.reply?.from_uid
+          ? `${this.config.sourceId}:${payload.reply.from_uid}`
+          : undefined,
+        mentioned_uids: payload.mention?.uids?.map(uid => `${this.config.sourceId}:${uid}`),
+        metadata: { channel_type: msg.channel_type },
+      };
+    });
+    await this.localDB.insertMessages(localMessages);
+    console.log(`  ✅ Synced ${localMessages.length} messages`);
+
+    // Step 4: Record sync status
+    await this.localDB.recordSync({
+      source_id: this.config.sourceId,
+      last_sync_at: new Date(),
+      sync_status: 'success',
+      messages_synced: localMessages.length,
+      users_synced: localUsers.length,
+      channels_synced: localChannels.length,
+    });
+
+    console.log('✅ Sync complete!');
+  }
+
+  /**
+   * Extract network graph (works in all modes)
+   */
+  async extractNetwork(options: OCTOExtractionOptions = {}): Promise<NetworkGraph> {
+    if (this.config.mode === 'remote') {
+      return this.extractFromRemote(options);
+    } else if (this.config.mode === 'local') {
+      return this.extractFromLocal(options);
+    } else {
+      throw new Error('extractNetwork not supported in sync mode. Use syncToLocal() first, then switch to local mode.');
+    }
+  }
+
+  /**
+   * Extract from remote database (legacy mode)
+   */
+  private async extractFromRemote(options: OCTOExtractionOptions): Promise<NetworkGraph> {
+    if (!this.remotePool) {
+      throw new Error('Not connected. Call connect() first.');
+    }
+
+    // Extract users
+    const dbUsers = await this.extractRemoteUsers();
     const users = dbUsers.map(u => ({
       id: u.uid,
       name: u.name,
@@ -107,9 +238,9 @@ export class OCTOAdapter {
     
     const { humans, bots } = NetworkGraphBuilder.separateUsers(users);
 
-    // Step 2: Extract messages
-    const dbMessages = await this.extractMessages(options);
-    const messages: Message[] = [];
+    // Extract messages
+    const dbMessages = await this.extractRemoteMessages(options);
+    const messages: GraphMessage[] = [];
     
     for (const msg of dbMessages) {
       const payload = this.parsePayload(msg.payload);
@@ -119,18 +250,17 @@ export class OCTOAdapter {
         id: msg.message_id,
         from_uid: msg.from_uid,
         to_uids: toUids,
-        content: '', // Empty content for privacy
+        content: payload.content || '',
         timestamp: new Date(msg.created_at),
         platform: 'octo',
         context_id: msg.channel_id,
       });
     }
 
-    // Step 3: Build edges
+    // Build edges
     const humanIds = new Set(humans.map(h => h.id));
     const botIds = new Set(bots.map(b => b.id));
     
-    // Convert messages to buildEdges format
     const msgForEdges = messages.map(m => ({
       id: m.id,
       from: m.from_uid,
@@ -140,15 +270,14 @@ export class OCTOAdapter {
     
     const edges = NetworkGraphBuilder.buildEdges(msgForEdges, humanIds, botIds);
 
-    // Step 4: Calculate time range
+    // Calculate time range
     const timestamps = messages.map(m => m.timestamp.getTime());
     const startTime = timestamps.length > 0 ? new Date(Math.min(...timestamps)) : new Date();
     const endTime = timestamps.length > 0 ? new Date(Math.max(...timestamps)) : new Date();
 
-    // Step 5: Build graph
     return NetworkGraphBuilder.build({
-      graphId: `octo_${Date.now()}`,
-      description: 'OCTO Internal IM Network',
+      graphId: `octo_remote_${Date.now()}`,
+      description: 'OCTO Internal IM Network (Remote)',
       startTime,
       endTime,
       humans,
@@ -159,12 +288,99 @@ export class OCTOAdapter {
   }
 
   /**
-   * Disconnect from database
+   * Extract from local database
+   */
+  private async extractFromLocal(options: OCTOExtractionOptions): Promise<NetworkGraph> {
+    if (!this.localDB) {
+      throw new Error('Not connected. Call connect() first.');
+    }
+
+    // Extract users
+    const dbUsers = await this.localDB.listUsers({ source_id: this.config.sourceId });
+    const users = dbUsers.map(u => ({
+      id: u.source_user_id, // Use original ID (without source prefix)
+      name: u.name || u.source_user_id,
+      is_bot: u.is_bot,
+      creator_uid: u.metadata?.creator_uid,
+    }));
+    
+    const { humans, bots } = NetworkGraphBuilder.separateUsers(users);
+
+    // Extract messages
+    const startTime = options.startTime ? Math.floor(options.startTime.getTime() / 1000) : undefined;
+    const endTime = options.endTime ? Math.floor(options.endTime.getTime() / 1000) : undefined;
+    const channelIds = options.channelIds?.map(id => `${this.config.sourceId}:${id}`);
+
+    const dbMessages = await this.localDB.queryMessages({
+      source_id: this.config.sourceId,
+      start_time: startTime,
+      end_time: endTime,
+      channel_ids: channelIds,
+    });
+
+    const messages: GraphMessage[] = dbMessages.map(msg => {
+      // Extract original IDs (remove source prefix)
+      const fromUid = msg.from_uid.replace(`${this.config.sourceId}:`, '');
+      const toUids = msg.mentioned_uids?.map((uid: string) => uid.replace(`${this.config.sourceId}:`, '')) || [];
+      
+      if (toUids.length === 0) {
+        // Fallback: broadcast to channel
+        toUids.push(msg.channel_id.replace(`${this.config.sourceId}:`, ''));
+      }
+
+      return {
+        id: msg.source_message_id,
+        from_uid: fromUid,
+        to_uids: toUids,
+        content: msg.content || '',
+        timestamp: new Date(msg.timestamp * 1000),
+        platform: 'octo',
+        context_id: msg.channel_id.replace(`${this.config.sourceId}:`, ''),
+      };
+    });
+
+    // Build edges
+    const humanIds = new Set(humans.map(h => h.id));
+    const botIds = new Set(bots.map(b => b.id));
+    
+    const msgForEdges = messages.map(m => ({
+      id: m.id,
+      from: m.from_uid,
+      to: m.to_uids,
+      timestamp: m.timestamp,
+    }));
+    
+    const edges = NetworkGraphBuilder.buildEdges(msgForEdges, humanIds, botIds);
+
+    // Calculate time range
+    const timestamps = messages.map(m => m.timestamp.getTime());
+    const graphStartTime = timestamps.length > 0 ? new Date(Math.min(...timestamps)) : new Date();
+    const graphEndTime = timestamps.length > 0 ? new Date(Math.max(...timestamps)) : new Date();
+
+    return NetworkGraphBuilder.build({
+      graphId: `octo_local_${Date.now()}`,
+      description: 'OCTO Internal IM Network (Local)',
+      startTime: graphStartTime,
+      endTime: graphEndTime,
+      humans,
+      bots,
+      edges,
+      messages,
+    });
+  }
+
+  /**
+   * Disconnect from database(s)
    */
   async disconnect(): Promise<void> {
-    if (this.pool) {
-      await this.pool.end();
-      this.pool = undefined;
+    if (this.remotePool) {
+      await this.remotePool.end();
+      this.remotePool = undefined;
+    }
+
+    if (this.localDB) {
+      await this.localDB.close();
+      this.localDB = undefined;
     }
   }
 
@@ -172,10 +388,10 @@ export class OCTOAdapter {
   // Private Helper Methods
   // ============================================
 
-  private async extractUsers(): Promise<DBUser[]> {
-    if (!this.pool) throw new Error('Not connected');
+  private async extractRemoteUsers(): Promise<RemoteDBUser[]> {
+    if (!this.remotePool) throw new Error('Not connected to remote');
 
-    const [rows] = await this.pool.query<mysql.RowDataPacket[]>(
+    const [rows] = await this.remotePool.query<mysql.RowDataPacket[]>(
       'SELECT uid, name, username, robot, robot_version FROM user'
     );
 
@@ -188,10 +404,32 @@ export class OCTOAdapter {
     }));
   }
 
-  private async extractMessages(options: OCTOExtractionOptions): Promise<DBMessage[]> {
-    if (!this.pool) throw new Error('Not connected');
+  private async extractRemoteChannels(): Promise<RemoteDBChannel[]> {
+    if (!this.remotePool) throw new Error('Not connected to remote');
 
-    const allMessages: DBMessage[] = [];
+    // Extract unique channels from message tables
+    const channelSet = new Set<string>();
+    const tables = ['message', 'message1', 'message2', 'message3', 'message4'];
+
+    for (const table of tables) {
+      try {
+        const [rows] = await this.remotePool.query<mysql.RowDataPacket[]>(
+          `SELECT DISTINCT channel_id, channel_type FROM ${table} LIMIT 10000`
+        );
+
+        rows.forEach(row => channelSet.add(JSON.stringify({ channel_id: row.channel_id, channel_type: row.channel_type })));
+      } catch (error) {
+        console.warn(`Table ${table} query failed (may not exist)`);
+      }
+    }
+
+    return Array.from(channelSet).map(json => JSON.parse(json));
+  }
+
+  private async extractRemoteMessages(options: OCTOExtractionOptions): Promise<RemoteDBMessage[]> {
+    if (!this.remotePool) throw new Error('Not connected to remote');
+
+    const allMessages: RemoteDBMessage[] = [];
     const tables = ['message', 'message1', 'message2', 'message3', 'message4'];
 
     for (const table of tables) {
@@ -214,7 +452,7 @@ export class OCTOAdapter {
       }
 
       try {
-        const [rows] = await this.pool.query<mysql.RowDataPacket[]>(query, params);
+        const [rows] = await this.remotePool.query<mysql.RowDataPacket[]>(query, params);
 
         const messages = rows.map(row => ({
           message_id: row.message_id,
@@ -227,8 +465,7 @@ export class OCTOAdapter {
 
         allMessages.push(...messages);
       } catch (error) {
-        // Skip tables that don't exist yet
-        console.warn(`Table ${table} query failed (may not exist):`, error);
+        console.warn(`Table ${table} query failed (may not exist)`);
       }
     }
 
@@ -244,7 +481,7 @@ export class OCTOAdapter {
     }
   }
 
-  private inferToUids(msg: DBMessage, payload: PayloadData): string[] {
+  private inferToUids(msg: RemoteDBMessage, payload: PayloadData): string[] {
     const toUids: string[] = [];
 
     // 1. Explicit mentions
