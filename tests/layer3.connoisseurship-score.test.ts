@@ -18,13 +18,15 @@ describe('Layer 3: ConnoisseurshipScore', () => {
     from_uid: string,
     to_uids: string[],
     content: string,
-    timestamp: Date
+    timestamp: Date,
+    reply_to?: string
   ): Message => ({
     id,
     from_uid,
     to_uids,
     content,
     timestamp,
+    reply_to,
   });
   
   // ========================================
@@ -146,15 +148,17 @@ describe('Layer 3: ConnoisseurshipScore', () => {
     it('should handle user with only normal messages (no connoisseurship)', () => {
       const botUids = ['bot1'];
       const messages: Message[] = [
-        createMessage('m1', 'bot1', ['user1'], 'Hello', new Date('2024-01-01T10:00:00Z')),
-        createMessage('m2', 'user1', ['bot1'], '收到', new Date('2024-01-01T10:01:00Z')),
-        createMessage('m3', 'user1', ['bot1'], 'OK', new Date('2024-01-01T10:02:00Z')),
+        // User messages not related to bot (no reply, no mention, not following bot)
+        createMessage('m1', 'user1', ['user2'], 'Hi there', new Date('2024-01-01T10:00:00Z')),
+        createMessage('m2', 'user1', ['user2'], 'How are you?', new Date('2024-01-01T10:01:00Z')),
+        createMessage('m3', 'bot1', ['user3'], 'Bot talking to someone else', new Date('2024-01-01T10:02:00Z')),
+        createMessage('m4', 'user1', ['user2'], 'See you', new Date('2024-01-01T10:03:00Z')),
       ];
       
       const calculator = new ConnoisseurshipScoreCalculator(messages, botUids);
       const metrics = calculator.calculateMetrics('user1');
       
-      expect(metrics.totalSent).toBe(2);
+      expect(metrics.totalSent).toBe(3);
       expect(metrics.connoisseurshipCount).toBe(0);
       expect(metrics.density).toBe(0);
       expect(metrics.power).toBe(0);
@@ -286,8 +290,8 @@ describe('Layer 3: ConnoisseurshipScore', () => {
       const breakdown = calculator.getDetailedBreakdown('user1');
       
       expect(breakdown.metrics).toBeDefined();
-      expect(breakdown.connoisseurshipMessageIds).toContain('m2');
-      expect(breakdown.respondedMessageIds).toContain('m2');
+      expect(breakdown.connoisseurshipDetails.map(d => d.messageId)).toContain('m2');
+      expect(breakdown.connoisseurshipDetails.filter(d => d.responded).map(d => d.messageId)).toContain('m2');
       expect(breakdown.lobbersEngaged).toContain('bot1');
     });
   });

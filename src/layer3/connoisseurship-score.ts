@@ -1,23 +1,45 @@
 /**
  * OCTO-ONA Layer 3: Connoisseurship Score
  * 
- * New 4-metric connoisseurship index system based on Pentland specification.
- * Replaces single Hub Score with multi-dimensional connoisseurship measurement.
+ * v2.0 - Structure-based connoisseurship detection (论迹不论心)
  * 
- * Core Metrics:
+ * Core change: 品鉴检测从"时序近似"改为"结构关系"
+ * 
+ * Old (v1): previousMessage by timestamp → 脆弱，误判率高
+ * New (v2): reply_to + @mention（2层强信号，移除弱信号）
+ * 
+ * Detection rules (strong signals only):
+ * 1. reply_to points to bot message → Connoisseurship (explicit reply)
+ * 2. @bot AND bot output exists in recent N messages → Connoisseurship (explicit mention)
+ * 
+ * Philosophy: "论迹不论心" - Judge by observable structure, not content intent
+ * Removed "immediate_follow" — too weak, high false positive rate
+ * 
+ * Metrics (unchanged):
  * 1. Connoisseurship Density = Connoisseurship Messages / Total Sent
- * 2. Connoisseurship Driving Force = Responded Connoisseurships / Total Connoisseurships
- * 3. Connoisseurship Span = Number of Different Lobsters Engaged
+ * 2. Connoisseurship Driving Force = Responded / Total Connoisseurships
+ * 3. Connoisseurship Span = Unique Lobsters Engaged
  * 4. Connoisseurship Power = Density × Driving Force × log2(Span + 1)
- * 
- * Key Rule:
- * A connoisseurship message must satisfy BOTH:
- * - Condition 1: Response to a lobster (previousMsg.sender.isBot === true)
- * - Condition 2: Contains judgmental language (keyword matching)
  */
 
 import { Message } from '../layer2/models';
 import { ConnoisseurDetector } from './connoisseur-detector';
+
+// ============================================
+// Configuration
+// ============================================
+
+/**
+ * Detection window: How many recent messages to check for bot output
+ * when @mention is detected
+ */
+const CONTEXT_WINDOW_SIZE = 10;
+
+/**
+ * Time window for "immediately follows bot" detection (milliseconds)
+ * Default: 5 minutes
+ */
+const IMMEDIATE_FOLLOW_WINDOW_MS = 5 * 60 * 1000;
 
 // ============================================
 // Type Definitions
@@ -49,10 +71,10 @@ export interface ConnoisseurshipMetrics {
   power: number;
 }
 
-export interface MessageContext {
-  message: Message;
-  previousMessage?: Message;
-  isBot: (uid: string) => boolean;
+export interface ConnoisseurshipDetectionResult {
+  isConnoisseurship: boolean;
+  signal: 'reply_to' | 'mention_with_context' | 'immediate_follow' | 'none';
+  targetBotUid?: string;
 }
 
 // ============================================
@@ -62,6 +84,8 @@ export interface MessageContext {
 export class ConnoisseurshipScoreCalculator {
   private messages: Message[];
   private botUids: Set<string>;
+  private messageById: Map<string, Message>;
+  private messagesByTimestamp: Message[];
   
   /**
    * @param messages - All messages in the network
@@ -70,6 +94,14 @@ export class ConnoisseurshipScoreCalculator {
   constructor(messages: Message[], botUids: string[]) {
     this.messages = messages;
     this.botUids = new Set(botUids);
+    
+    // Build message index
+    this.messageById = new Map(messages.map(m => [m.id, m]));
+    
+    // Sort messages by timestamp for context lookup
+    this.messagesByTimestamp = [...messages].sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+    );
   }
   
   /**
@@ -80,54 +112,107 @@ export class ConnoisseurshipScoreCalculator {
   }
   
   /**
-   * Build message context with previous message lookup
+   * Extract @mentions from message content
    * 
-   * Creates a map: messageId -> previous message (by timestamp)
+   * Simplified: assumes @uid format (adapt to platform)
    */
-  private buildMessageContext(): Map<string, Message | undefined> {
-    const context = new Map<string, Message | undefined>();
-    
-    // Sort messages by timestamp
-    const sorted = [...this.messages].sort(
-      (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
-    );
-    
-    // For each message, find its previous message
-    for (let i = 0; i < sorted.length; i++) {
-      const current = sorted[i];
-      const previous = i > 0 ? sorted[i - 1] : undefined;
-      context.set(current.id, previous);
-    }
-    
-    return context;
+  private extractMentions(content: string): string[] {
+    const mentionRegex = /@([a-zA-Z0-9_-]+)/g;
+    const matches = content.matchAll(mentionRegex);
+    return Array.from(matches, m => m[1]);
   }
   
   /**
-   * Check if a message is a connoisseurship message
-   * 
-   * Must satisfy BOTH conditions:
-   * 1. Response to a lobster (previous message sender is bot)
-   * 2. Contains judgmental language (ConnoisseurDetector)
-   * 
-   * @param message - Current message
-   * @param previousMessage - Previous message in timeline
-   * @returns true if connoisseurship detected
+   * Get recent N messages before this message
    */
-  private isConnoisseurshipMessage(
-    message: Message,
-    previousMessage?: Message
-  ): boolean {
-    // Condition 1: Previous message must exist and be from a bot
-    if (!previousMessage || !this.isBot(previousMessage.from_uid)) {
-      return false;
+  private getRecentMessages(message: Message, count: number): Message[] {
+    const index = this.messagesByTimestamp.findIndex(m => m.id === message.id);
+    if (index === -1) return [];
+    
+    const start = Math.max(0, index - count);
+    return this.messagesByTimestamp.slice(start, index);
+  }
+  
+  /**
+   * Get immediately preceding message
+   */
+  private getImmediatePrevious(message: Message): Message | undefined {
+    const recent = this.getRecentMessages(message, 1);
+    return recent[0];
+  }
+  
+  /**
+   * Detect connoisseurship using structure-based rules
+   * 
+   * 3-layer detection (按信号强度, 论迹不论心):
+   * 1. reply_to → bot message (strongest, explicit reply)
+   * 2. @bot + bot output in recent context (strong, explicit mention)
+   * 3. Immediately follows bot + to_uids includes bot (fallback for platforms without reply_to)
+   * 
+   * Note: Rule 3 is a fallback for backward compatibility and platforms without reply_to.
+   * It includes a "to_uids check" to reduce false positives (e.g., "收到", "OK" to other users).
+   * 
+   * @param message - Message to check
+   * @returns Detection result with signal type
+   */
+  private detectConnoisseurship(message: Message): ConnoisseurshipDetectionResult {
+    // Rule 0: Sender must be human (bots cannot be connoisseurs)
+    if (this.isBot(message.from_uid)) {
+      return { isConnoisseurship: false, signal: 'none' };
     }
     
-    // Condition 2: Must contain judgmental language
-    if (!ConnoisseurDetector.isConnoisseurship(message.content)) {
-      return false;
+    // Rule 1: reply_to points to bot message (strongest)
+    if (message.reply_to) {
+      const replyTarget = this.messageById.get(message.reply_to);
+      if (replyTarget && this.isBot(replyTarget.from_uid)) {
+        return {
+          isConnoisseurship: true,
+          signal: 'reply_to',
+          targetBotUid: replyTarget.from_uid,
+        };
+      }
     }
     
-    return true;
+    // Rule 2: @bot AND bot output in recent context
+    const mentions = this.extractMentions(message.content);
+    const mentionedBots = mentions.filter(uid => this.isBot(uid));
+    
+    if (mentionedBots.length > 0) {
+      const recentMessages = this.getRecentMessages(message, CONTEXT_WINDOW_SIZE);
+      const botOutputExists = recentMessages.some(m =>
+        mentionedBots.includes(m.from_uid)
+      );
+      
+      if (botOutputExists) {
+        return {
+          isConnoisseurship: true,
+          signal: 'mention_with_context',
+          targetBotUid: mentionedBots[0], // Pick first mentioned bot
+        };
+      }
+    }
+    
+    // Rule 3: Fallback for platforms without reply_to
+    // Immediately follows bot + to_uids includes bot + time window check
+    const prevMsg = this.getImmediatePrevious(message);
+    if (prevMsg && this.isBot(prevMsg.from_uid)) {
+      const timeDiff = message.timestamp.getTime() - prevMsg.timestamp.getTime();
+      const toBot = message.to_uids.some(uid => this.isBot(uid));
+      
+      if (timeDiff <= IMMEDIATE_FOLLOW_WINDOW_MS && toBot) {
+        return {
+          isConnoisseurship: true,
+          signal: 'immediate_follow',
+          targetBotUid: prevMsg.from_uid,
+        };
+      }
+    }
+    
+    // No connoisseurship detected
+    return {
+      isConnoisseurship: false,
+      signal: 'none',
+    };
   }
   
   /**
@@ -169,14 +254,15 @@ export class ConnoisseurshipScoreCalculator {
     const userMessages = this.messages.filter(m => m.from_uid === uid);
     const totalSent = userMessages.length;
     
-    // Build context (previousMessage lookup)
-    const context = this.buildMessageContext();
+    // Identify connoisseurship messages using structure-based detection
+    const connoisseurshipResults = userMessages.map(msg => ({
+      message: msg,
+      detection: this.detectConnoisseurship(msg),
+    }));
     
-    // Identify connoisseurship messages
-    const connoisseurshipMessages = userMessages.filter(msg => {
-      const prevMsg = context.get(msg.id);
-      return this.isConnoisseurshipMessage(msg, prevMsg);
-    });
+    const connoisseurshipMessages = connoisseurshipResults
+      .filter(r => r.detection.isConnoisseurship)
+      .map(r => r.message);
     
     const connoisseurshipCount = connoisseurshipMessages.length;
     
@@ -187,10 +273,9 @@ export class ConnoisseurshipScoreCalculator {
     
     // Count unique lobsters engaged
     const lobbersEngaged = new Set<string>();
-    for (const msg of connoisseurshipMessages) {
-      const prevMsg = context.get(msg.id);
-      if (prevMsg && this.isBot(prevMsg.from_uid)) {
-        lobbersEngaged.add(prevMsg.from_uid);
+    for (const result of connoisseurshipResults) {
+      if (result.detection.isConnoisseurship && result.detection.targetBotUid) {
+        lobbersEngaged.add(result.detection.targetBotUid);
       }
     }
     const uniqueLobbersEngaged = lobbersEngaged.size;
@@ -280,38 +365,44 @@ export class ConnoisseurshipScoreCalculator {
    * Get detailed breakdown for debugging
    * 
    * @param uid - User ID
-   * @returns Detailed analysis with message IDs
+   * @returns Detailed analysis with signal types
    */
   getDetailedBreakdown(uid: string): {
     metrics: ConnoisseurshipMetrics;
-    connoisseurshipMessageIds: string[];
-    respondedMessageIds: string[];
+    connoisseurshipDetails: Array<{
+      messageId: string;
+      signal: string;
+      targetBot?: string;
+      responded: boolean;
+    }>;
     lobbersEngaged: string[];
   } {
     const userMessages = this.messages.filter(m => m.from_uid === uid);
-    const context = this.buildMessageContext();
     
-    const connoisseurshipMessages = userMessages.filter(msg => {
-      const prevMsg = context.get(msg.id);
-      return this.isConnoisseurshipMessage(msg, prevMsg);
-    });
+    const connoisseurshipResults = userMessages.map(msg => ({
+      message: msg,
+      detection: this.detectConnoisseurship(msg),
+    }));
     
-    const respondedMessages = connoisseurshipMessages.filter(msg =>
-      this.hasLobsterResponse(msg)
-    );
+    const connoisseurshipDetails = connoisseurshipResults
+      .filter(r => r.detection.isConnoisseurship)
+      .map(r => ({
+        messageId: r.message.id,
+        signal: r.detection.signal,
+        targetBot: r.detection.targetBotUid,
+        responded: this.hasLobsterResponse(r.message),
+      }));
     
     const lobbersEngaged = new Set<string>();
-    for (const msg of connoisseurshipMessages) {
-      const prevMsg = context.get(msg.id);
-      if (prevMsg && this.isBot(prevMsg.from_uid)) {
-        lobbersEngaged.add(prevMsg.from_uid);
+    for (const detail of connoisseurshipDetails) {
+      if (detail.targetBot) {
+        lobbersEngaged.add(detail.targetBot);
       }
     }
     
     return {
       metrics: this.calculateMetrics(uid),
-      connoisseurshipMessageIds: connoisseurshipMessages.map(m => m.id),
-      respondedMessageIds: respondedMessages.map(m => m.id),
+      connoisseurshipDetails,
       lobbersEngaged: Array.from(lobbersEngaged),
     };
   }
