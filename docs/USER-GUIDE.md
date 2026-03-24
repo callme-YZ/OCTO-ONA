@@ -135,7 +135,7 @@ const adapter = new DMWorkAdapter();
 await adapter.connect({
   host: 'localhost',
   port: 3306,
-  user: 'dmwork_ro',
+  user: 'readonly_user',
   password: 'password',
   database: 'im',
 });

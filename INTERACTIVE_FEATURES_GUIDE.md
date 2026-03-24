@@ -195,4 +195,4 @@ ECharts re-renders
 
 **Generated:** 2026-03-22  
 **Version:** OCTO-ONA v1.2.1  
-**Author:** Mayo 🥚
+**Author: OpenClaw Team

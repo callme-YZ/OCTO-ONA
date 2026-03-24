@@ -82,7 +82,7 @@ socialCentrality?: number; // Renamed from hubScore
 
 ## Acceptance Criteria Verification
 
-### ✅ Criterion 1: 辉哥排名 top (最高品鉴力)
+### ✅ Criterion 1: Alice排名 top (最高品鉴力)
 
 **Demo Result:**
 ```
@@ -93,7 +93,7 @@ socialCentrality?: number; // Renamed from hubScore
 4. xiaowang - Power: 0.0000
 ```
 
-**Breakdown (辉哥):**
+**Breakdown (Alice):**
 - Density: 100.00% (3 connoisseurships / 3 sent)
 - Driving Force: 100.00% (3 responded / 3 total)
 - Span: 2 (engaged with 2 lobsters)
@@ -167,7 +167,7 @@ A message is connoisseurship **if and only if**:
 Density = Connoisseurship Messages / Total Sent
 ```
 
-**Example (辉哥):** 3 / 3 = 1.0 (100%)
+**Example (Alice):** 3 / 3 = 1.0 (100%)
 
 ---
 
@@ -180,7 +180,7 @@ Driving Force = Responded Connoisseurships / Total Connoisseurships
 **Definition of "Responded":**  
 A connoisseurship got a response if ANY subsequent bot message exists within 24 hours.
 
-**Example (辉哥):** 3 / 3 = 1.0 (100%)
+**Example (Alice):** 3 / 3 = 1.0 (100%)
 
 ---
 
@@ -190,7 +190,7 @@ A connoisseurship got a response if ANY subsequent bot message exists within 24 
 Span = Number of Unique Lobsters Engaged
 ```
 
-**Example (辉哥):** 2 (bot_lobster1, bot_lobster2)
+**Example (Alice):** 2 (bot_lobster1, bot_lobster2)
 
 ---
 
@@ -200,7 +200,7 @@ Span = Number of Unique Lobsters Engaged
 Power = Density × Driving Force × log2(Span + 1)
 ```
 
-**Example (辉哥):**  
+**Example (Alice):**  
 Power = 1.0 × 1.0 × log2(2 + 1) = 1.0 × 1.0 × 1.585 = **1.5850**
 
 ---
@@ -275,7 +275,7 @@ npx ts-node examples/connoisseurship-score-demo.ts
 - `AnalysisEngine` enhanced with 3 new methods
 
 **Acceptance Criteria Met:**
-- ✅ 辉哥排名 top
+- ✅ Alice排名 top
 - ✅ 龙虾品鉴力 = 0
 - ✅ 排名差异化
 

@@ -47,8 +47,8 @@ import { z } from 'zod';
 
 const pool = mysql.createPool({
   host: 'example.com',
-  port: 13306,
-  user: 'dmwork_ro',
+  port: 3306,
+  user: 'readonly_user',
   database: 'im',
 });
 

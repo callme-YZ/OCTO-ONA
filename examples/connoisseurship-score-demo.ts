@@ -28,7 +28,7 @@ const createMessage = (
 const botUids = ['bot_lobster1', 'bot_lobster2'];
 
 const messages: Message[] = [
-  // === 辉哥 (huige) - High connoisseurship ===
+  // === Alice (alice) - High connoisseurship ===
   // Engage with lobster1
   createMessage('m1', 'bot_lobster1', ['huige'], 'Feature X ready', new Date('2024-01-01T10:00:00Z')),
   createMessage('m2', 'huige', ['bot_lobster1'], '感觉不对，UI不够优雅', new Date('2024-01-01T10:01:00Z')),
@@ -104,7 +104,7 @@ for (const [botUid, power] of Object.entries(verification.botMetrics)) {
 
 // 4. Detailed breakdown for top user
 console.log('\n' + '='.repeat(70));
-console.log('🔍 Detailed Breakdown (辉哥):');
+console.log('🔍 Detailed Breakdown (Alice):');
 console.log('-'.repeat(70));
 
 const huigeBreakdown = calculator.getDetailedBreakdown('huige');

@@ -347,8 +347,8 @@ class DMWorkAdapter extends BaseAdapter {
      * 
      * @param config - {
      *   host: 'example.com',
-     *   port: 13306,
-     *   user: 'dmwork_ro',
+     *   port: 3306,
+     *   user: 'readonly_user',
      *   password: '...',
      *   database: 'im',
      *   platform: 'dmwork'
@@ -488,8 +488,8 @@ export { DMWorkAdapter };
 // 配置
 const config = {
   host: 'example.com',
-  port: 13306,
-  user: 'dmwork_ro',
+  port: 3306,
+  user: 'readonly_user',
   password: 'your_password',
   database: 'im',
   platform: 'dmwork'

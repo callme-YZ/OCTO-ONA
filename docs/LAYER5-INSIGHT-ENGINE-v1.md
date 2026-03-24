@@ -572,7 +572,7 @@ class InsightReport(BaseModel):
 
 **证据**:
 - Burnout Risk: 42.9%
-- 过载人员: Charlie(BC=0.45), Alice(BC=0.38), 梦林(BC=0.32)
+- 过载人员: Charlie(BC=0.45), Alice(BC=0.38), Bob(BC=0.32)
 
 **建议**:
 1. 分散职责：将过载人员的桥梁职责分散到其他人或Bot

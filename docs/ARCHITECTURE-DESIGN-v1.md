@@ -1,7 +1,7 @@
 # OCTO-ONA Architecture Design v2.0
 
 **Date**: 2026-03-19  
-**Author**: Mayo  
+**Author: OpenClaw Team  
 **Status**: Draft → Design Complete (Metrics Layer)  
 **Last Updated**: 2026-03-19 21:42  
 **Version**: v2.0 (Node.js/TypeScript 重写)

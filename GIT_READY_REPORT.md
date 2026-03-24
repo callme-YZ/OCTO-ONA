@@ -65,7 +65,7 @@ Core Logic:
 - Logarithmic span scaling in power metric
 
 Acceptance Criteria Met:
-✅ 辉哥 (human) ranks top by Connoisseurship Power
+✅ Alice (human) ranks top by Connoisseurship Power
 ✅ All bots have Connoisseurship Power = 0
 ✅ Power rankings differ from Social Centrality rankings
 
@@ -76,7 +76,7 @@ Tests:
 
 Breaking Changes: None (backward compatible)
 
-Co-authored-by: Mayo <mayo@openclaw>
+Co-authored-by: OpenClaw Team <team@openclaw>
 ```
 
 ---
@@ -129,7 +129,7 @@ feat: Implement Connoisseurship Index System (v1.3.0)
 - Add demo script and documentation
 
 Acceptance Criteria Met:
-✅ 辉哥 ranks top by Connoisseurship Power
+✅ Alice ranks top by Connoisseurship Power
 ✅ All bots have Power = 0
 ✅ Power rankings differ from Social Centrality
 

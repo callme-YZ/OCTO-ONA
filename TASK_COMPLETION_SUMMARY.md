@@ -96,7 +96,7 @@ socialCentrality?: number;             // 社交中心度（原 Hub Score）
 
 ## 验收标准确认
 
-### ✅ 标准 1: 辉哥排名 top
+### ✅ 标准 1: Alice排名 top
 
 **实际结果:**
 ```
@@ -290,7 +290,7 @@ feat: Implement Connoisseurship Index System (v1.3.0)
 - Add demo script and implementation report
 
 Acceptance criteria:
-✅ 辉哥 ranks top by Connoisseurship Power
+✅ Alice ranks top by Connoisseurship Power
 ✅ All bots have Power = 0
 ✅ Power rankings differ from Social Centrality
 

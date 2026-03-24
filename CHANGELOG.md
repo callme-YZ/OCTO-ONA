@@ -28,7 +28,7 @@
   - `verifyConnoisseurshipSystem()` - Validation helper
 
 ### Acceptance Criteria Met
-✅ 辉哥 (human) ranks top by Connoisseurship Power  
+✅ Alice (human) ranks top by Connoisseurship Power  
 ✅ All bots have Connoisseurship Power = 0  
 ✅ Power rankings ≠ Social Centrality rankings
 
