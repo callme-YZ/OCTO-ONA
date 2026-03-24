@@ -992,3 +992,66 @@ The HTML uses `fetch('./data.json')` to load data at runtime, making it perfect 
 - Multi-environment dashboards (same HTML, different data.json)
 - Progressive web apps (cache HTML, fetch latest data)
 
+
+---
+
+## CLI Usage (v2.0)
+
+### Sync Command
+
+Sync data from remote database to local cache:
+
+```bash
+# Incremental sync (default)
+npx octo-ona sync dmwork-octo
+
+# Full sync
+npx octo-ona sync dmwork-octo --full
+
+# Specify time range
+npx octo-ona sync dmwork-octo --start-time 2026-03-01 --end-time 2026-03-20
+
+# Verbose output
+npx octo-ona sync dmwork-octo --verbose
+```
+
+### Configuration
+
+Create config files in project root:
+
+**octo-remote.config.json** (Remote database):
+```json
+{
+  "host": "remote.example.com",
+  "port": 13306,
+  "user": "readonly",
+  "password": "your-password",
+  "database": "im"
+}
+```
+
+**octo-ona.config.json** (Local database):
+```json
+{
+  "host": "localhost",
+  "port": 3306,
+  "user": "root",
+  "password": "",
+  "database": "octo_ona"
+}
+```
+
+**Alternative:** Use environment variables:
+```bash
+export OCTO_REMOTE_HOST=remote.example.com
+export OCTO_REMOTE_PORT=13306
+export OCTO_REMOTE_USER=readonly
+export OCTO_REMOTE_PASSWORD=your-password
+export OCTO_REMOTE_DATABASE=im
+
+export OCTO_LOCAL_HOST=localhost
+export OCTO_LOCAL_PORT=3306
+export OCTO_LOCAL_USER=root
+export OCTO_LOCAL_PASSWORD=
+export OCTO_LOCAL_DATABASE=octo_ona
+```

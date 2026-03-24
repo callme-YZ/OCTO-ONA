@@ -139,18 +139,19 @@ export class ConfigServer {
           await githubAdapter.disconnect();
           res.json({ success: true });
         } else if (adapter === 'octo') {
-          const octoAdapter = new OCTOAdapter();
-          await octoAdapter.connect({
-            host: config.host,
-            port: config.port,
-            user: config.user,
-            password: config.password,
-            database: config.database
+          const octoAdapter = new OCTOAdapter({
+            mode: 'remote',
+            sourceId: 'dmwork-test',
+            remoteConfig: {
+              host: config.host,
+              port: config.port,
+              user: config.user,
+              password: config.password,
+              database: config.database,
+            },
           });
+          await octoAdapter.connect();
           await octoAdapter.disconnect();
-          res.json({ success: true });
-        } else if (adapter === 'excel') {
-          // Excel doesn't need connection test (validated on upload)
           res.json({ success: true });
         } else {
           res.status(400).json({ error: 'Unsupported adapter' });
@@ -249,14 +250,18 @@ export class ConfigServer {
       await githubAdapter.disconnect();
       return graph;
     } else if (adapter === 'octo') {
-      const octoAdapter = new OCTOAdapter();
-      await octoAdapter.connect({
-        host: adapterConfig.host,
-        port: adapterConfig.port,
-        user: adapterConfig.user,
-        password: adapterConfig.password,
-        database: adapterConfig.database
+      const octoAdapter = new OCTOAdapter({
+        mode: 'remote',
+        sourceId: 'dmwork-web-ui',
+        remoteConfig: {
+          host: adapterConfig.host,
+          port: adapterConfig.port,
+          user: adapterConfig.user,
+          password: adapterConfig.password,
+          database: adapterConfig.database,
+        },
       });
+      await octoAdapter.connect();
       const graph = await octoAdapter.extractNetwork(options);
       await octoAdapter.disconnect();
       return graph;
