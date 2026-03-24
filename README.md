@@ -2,9 +2,26 @@
 
 > Organizational Network Analysis Framework for Human-AI Collaboration
 
+**Version 2.0** — Database-driven metrics engine with local caching & CLI tools
+
 [English](#english) | [中文](#中文)
 
 ---
+
+## 🎉 What's New in v2.0
+
+- 🗄️ **Database-Driven Architecture** — All metric definitions stored in MySQL (no hardcoded logic)
+- 💾 **Local Data Caching** — Sync remote data once, analyze offline forever
+- 🚀 **CLI Tools** — `octo-ona sync` for data synchronization
+- 🔧 **Dynamic Metrics** — Add/modify metrics via database (no code changes)
+- 📈 **Result Caching** — Store analysis results with version tracking
+- 🧪 **E2E Tests** — Full workflow validation (54 tests passing)
+
+[📋 View Changelog](./CHANGELOG.md) | [🚀 Quick Start](#quick-start) | [📖 Migration Guide](#migration-guide-v1x--v20)
+
+---
+
+## English
 
 ## English
 

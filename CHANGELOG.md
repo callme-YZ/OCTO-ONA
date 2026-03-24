@@ -1,110 +1,3 @@
-## [1.3.0] - 2026-03-22
-
-### Added
-- **New Connoisseurship Index System** - 4-metric replacement for Hub Score
-  - **Connoisseurship Density** = Connoisseurship Messages / Total Sent
-  - **Connoisseurship Driving Force** = Responded Connoisseurships / Total Connoisseurships
-  - **Connoisseurship Span** = Unique Lobsters Engaged
-  - **Connoisseurship Power** = Density × Driving Force × log2(Span + 1)
-  - New `ConnoisseurshipScoreCalculator` class in `src/layer3/connoisseurship-score.ts`
-  - Connoisseurship detection requires BOTH:
-    1. Response to bot message (previousMsg.sender.isBot === true)
-    2. Judgmental language (keyword matching via ConnoisseurDetector)
-
-### Changed
-- **Hub Score renamed to Social Centrality** - Preserves original metric
-  - `HumanNode.socialCentrality` (formerly `hubScore`)
-  - Parallel display with Connoisseurship Power
-  - Different ranking from connoisseurship metrics
-- **Data Model Extended** (Layer 2) - New optional fields in `HumanNode`:
-  - `connoisseurshipDensity?: number`
-  - `connoisseurshipDrivingForce?: number`
-  - `connoisseurshipSpan?: number`
-  - `connoisseurshipPower?: number`
-  - `socialCentrality?: number` (renamed from Hub Score)
-- **AnalysisEngine Enhanced** (Layer 3) - New methods:
-  - `calculateConnoisseurshipMetrics()` - Compute 4 metrics + social centrality
-  - `getTopByConnoisseurshipPower()` - Rank users by connoisseurship power
-  - `verifyConnoisseurshipSystem()` - Validation helper
-
-### Acceptance Criteria Met
-✅ Alice (human) ranks top by Connoisseurship Power  
-✅ All bots have Connoisseurship Power = 0  
-✅ Power rankings ≠ Social Centrality rankings
-
-### Tests
-- 14 new unit tests in `tests/layer3.connoisseurship-score.test.ts`
-- All 141 existing tests pass
-- Edge cases covered: no messages, no bots, bot-only conversations
-
-### Migration Notes
-- Backward compatible - Hub Score still calculated
-- Social Centrality replaces Hub Score in new analyses
-- Old data models continue to work (new fields optional)
-
-### Technical
-- Pentland specification compliance
-- Message time-series analysis with context
-- 24-hour response window for driving force
-- Logarithmic span scaling for power metric
-## [1.2.1] - 2026-03-22
-
-### Added
-- **Interactive Dashboard Controls** - Enhanced user interaction
-  - **Network Graph Layout Switching**:
-    - Force-directed layout (default) - Physics-based node positioning
-    - Circular layout - Nodes arranged in a circle
-    - Radial layout - Central node with radial distribution
-    - Easy toggle via button group in graph header
-  - **Node Ranking Sort Dimensions**:
-    - Hub Score (被@数/发送数) - Default ONA metric
-    - Sent Messages - Total messages sent by node
-    - Received Messages - Total messages received (被提及数)
-    - Node Degree - Total connections
-    - Group Count - Number of unique groups participated
-    - Interactive dropdown selector in rankings chart
-
-### Changed
-- `dashboard-template.html` - Added controls and interactive logic
-- `dashboard-template-external.html` - Synced with inline template
-- Chart titles now flex containers to accommodate controls
-- Added responsive CSS for mobile devices
-
-### Technical
-- ECharts 5.x layout API integration
-- Dynamic chart re-rendering on layout/dimension change
-- Client-side metrics calculation from network data
-- ~6KB additional JavaScript for interactivity
-- No breaking changes - backward compatible
-
-### UX Improvements
-- Visual feedback for active layout/sort selection
-- Smooth transitions between layouts
-- Color-coded rankings by connoisseur layer
-- Consistent styling across all controls
-
-## [1.2.0] - 2026-03-22
-
-### Added
-- **External Data Loading for Dashboards** - New `generateWithExternalData()` method
-  - Generates separate `index.html` and `data.json` files
-  - HTML uses `fetch('./data.json')` to load data at runtime
-  - Enables separation of presentation and data
-  - Smaller file sizes (~16KB HTML vs ~200KB+ inline mode)
-  - Better for version control, CI/CD, and multi-environment deployments
-
-### Changed
-- DashboardGenerator now supports two modes:
-  - `generate(outputPath)` - Original inline data mode (backward compatible)
-  - `generateWithExternalData(outputDir)` - New external data mode
-
-### Examples
-- Added `examples/dashboard-demo-external.ts` demonstrating new feature
-
-### Documentation
-- Updated README.md with v1.2 features section
-- Added benefits and use cases for external data mode
-
 # Changelog
 
 All notable changes to OCTO-ONA will be documented in this file.
@@ -112,181 +5,190 @@ All notable changes to OCTO-ONA will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
----
-
-## [1.1.5] - 2026-03-20
+## [2.0.0] - 2026-03-24
 
 ### Added
-- 📥 **Excel Template Generator** — Download pre-formatted Excel template
-- 📤 **Excel File Import** — Upload filled template for analysis
-- 📊 **3-Sheet Template** — Users, Messages, Instructions
-- 🎨 **Formatted Template** — Color-coded headers, example data
-- 📝 **Detailed Instructions** — In-template user guide
+
+#### Database Infrastructure
+- **Local database schema v2.0** (#14)
+  - 17 tables + 5 views for multi-source data caching
+  - Support for Discord, DMWork, GitHub data sources
+  - Metrics metadata tables (categories, formulas, parameters)
+  - Analysis results caching with version tracking
+
+- **LocalDatabase class** (#15)
+  - Complete CRUD API for all tables
+  - Connection pooling and transaction support
+  - Type-safe operations with TypeScript
+  - 12 unit tests covering all operations
+
+#### Data Synchronization
+- **OCTOAdapter multi-mode support** (#16)
+  - `remote` mode: Direct remote DB access (legacy)
+  - `local` mode: Read from local cache (offline-capable)
+  - `sync` mode: Sync remote → local (incremental/full)
+  - 5 unit tests for all modes
+
+- **CLI sync command** (#18)
+  - `octo-ona sync <source_id>` for data synchronization
+  - Incremental sync based on `last_sync_at`
+  - Time range filters (`--start-time`, `--end-time`)
+  - Verbose logging (`--verbose`)
+  - Configuration from files or environment variables
+
+#### Metrics Engine
+- **Seed metrics data** (#19)
+  - 10 P0 metrics pre-seeded in database
+  - 4 metric categories (network, collaboration, connoisseurship, bot_tag)
+  - Configurable parameters (L3.3: window_minutes, T5: percentile)
+  - Changelog tracking for all metrics
+  - 8 verification tests
+
+- **MetricsEngine class** (#20)
+  - Dynamic metric loading from database
+  - 4 formula types: graphology, custom, SQL, JavaScript
+  - Parameter validation (type, min/max)
+  - Result caching to `analysis_results` table
+  - 12 unit tests
+
+- **MetricsCalculator v2** (#21)
+  - Database-driven metric calculation
+  - v1 API backward compatibility
+  - Hybrid mode (DB-first, legacy fallback)
+  - Seamless migration path from v1 → v2
+  - 11 unit tests (v1, v2, hybrid modes)
+
+#### Testing & Validation
+- **E2E workflow test** (#24)
+  - Complete workflow: insert data → build graph → calculate metrics → export
+  - Validation of all 10 P0 metrics
+  - Export to JSON and CSV formats
+  - 2 comprehensive integration tests
 
 ### Changed
-- 🌐 **Web UI Enhancement** — Excel option in platform selector
-- 🔄 **File Upload Support** — Multer integration (10MB limit)
-- 🗑️ **Auto Cleanup** — Uploaded files deleted after analysis
-
-### Technical
-- `src/layer1/adapters/excel-template.ts` (250 lines) — Template generator
-- `src/layer1/adapters/excel-adapter.ts` (240 lines) — Excel parser
-- Updated `config-server.ts` — Template download + file upload routes
-- Updated Web UI (HTML/JS/CSS) — Excel configuration panel
-- New dependency: multer@1.4.5-lts.1
-- 127/127 tests passing (100%)
-
-### Use Cases
-- ✅ Users without database access
-- ✅ Manual data collection (meetings, emails)
-- ✅ Small-scale testing (<100 people)
-- ✅ Cross-platform data fusion
-
-### Security
-- ✅ File size limit (10MB)
-- ✅ File type validation (.xlsx only)
-- ✅ Auto cleanup after analysis
-- ✅ No permanent storage
-
-### Example Workflow
-1. Download template: Click "📥 Download Excel Template"
-2. Fill data: Users sheet + Messages sheet
-3. Upload: Select filled .xlsx file
-4. Analyze: Click "🚀 Run Analysis"
-5. View: Dashboard generated automatically
-
----
-
-## [1.1.4] - 2026-03-20
-
-### Added
-- 🔌 **OCTO Adapter** — Connect to OCTO Internal IM platform (DMWork backend)
-- 💾 **Direct database connection** — MySQL support with 5-table sharding
-- 🌐 **Web UI integration** — OCTO platform available in configuration wizard
-- 🌍 **Multi-language OCTO support** — Chinese and English labels for database fields
-
-### Changed
-- 📝 **Secure configuration** — No hardcoded server addresses or credentials
-- 🔒 **Environment variable support** — Optional config via OCTO_DB_* variables
-- 📚 **Updated language packs** — Added OCTO-specific translations (en.json, zh.json)
-
-### Technical
-- `src/layer1/adapters/octo-adapter.ts` (270 lines) — New OCTO adapter
-- Updated `config-server.ts` — Added OCTO route support
-- Updated Web UI (HTML/JS/CSS) — OCTO configuration form
-- 127/127 tests passing (100%)
-
-### Security
-- ✅ No hardcoded credentials in code
-- ✅ No real server addresses in examples
-- ✅ User must provide all connection parameters
-- ✅ Supports environment variables for automation
-
-### Documentation
-- README updated with OCTO adapter usage
-- Example configuration for database connection
-
----
-
-## [1.1.3] - 2026-03-20
-
-### Added
-- 🚀 **One-command startup** — `npm run start:ui` to launch Web UI
-- 📝 **Simplified README** — "Fastest Way to Get Started" section
-- 🔧 **Development mode** — `npm run dev:ui` with auto-reload
-- 📦 **Auto-copy static files** — `npm run build` now includes Web UI assets
-
-### Changed
-- ✨ **Improved user experience** — No more manual file copying
-- 📚 **Updated documentation** — Clearer installation instructions
+- **Metric definitions** moved from hardcoded TypeScript to database
+- **OCTOAdapter** refactored to support local caching
+- **MetricsCalculator** refactored to use MetricsEngine
 
 ### Fixed
-- 🐛 **Static file 404 errors** — Fixed missing HTML/CSS/JS/JSON in dist/
-- 🔨 **Build script** — Now copies `src/web-ui/public/*` to `dist/web-ui/public/`
+- **OCTOAdapter**: Broadcast logic now uses all users instead of invalid channel_id node (#24)
+- **MetricsCalculator**: Added missing `await` for async result conversion (#24)
 
-### Developer Notes
-This release focuses on improving the installation and startup experience based on user feedback. Users can now start the Web UI with a single command instead of complex npx commands.
+### Technical Improvements
+- **Test coverage**: 54 tests (all passing)
+  - Database: 26 tests
+  - Adapters: 5 tests
+  - Metrics: 23 tests
+- **Type safety**: Full TypeScript support with strict types
+- **Documentation**: README updated with CLI usage examples
+
+### Migration Guide
+
+#### For existing users (v1.x → v2.0):
+
+**Step 1: Install dependencies**
+```bash
+npm install
+```
+
+**Step 2: Set up local database**
+```bash
+# Install MySQL (if not already)
+brew install mysql
+
+# Create database
+mysql -u root -e "CREATE DATABASE octo_ona CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# Run schema
+mysql -u root octo_ona < schema-v2.sql
+
+# Seed metrics
+mysql -u root octo_ona < seed-metrics.sql
+```
+
+**Step 3: Configure database connections**
+
+Create `octo-ona.config.json`:
+```json
+{
+  "host": "localhost",
+  "port": 3306,
+  "user": "root",
+  "password": "",
+  "database": "octo_ona"
+}
+```
+
+Create `octo-remote.config.json` (add to .gitignore):
+```json
+{
+  "host": "your-remote-host",
+  "port": 13306,
+  "user": "readonly",
+  "password": "your-password",
+  "database": "im"
+}
+```
+
+**Step 4: Sync data**
+```bash
+npx octo-ona sync dmwork-octo
+```
+
+**Step 5: Update code (optional, for backward compatibility)**
+
+Old v1 code still works:
+```typescript
+const calc = new MetricsCalculator(graph);
+calc.registerMetrics(METRICS);
+const results = await calc.calculateAll();
+```
+
+New v2 code (recommended):
+```typescript
+const db = new LocalDatabase(config);
+const calc = new MetricsCalculator(graph, db);
+const results = await calc.calculateAll(); // Auto-loads from DB
+```
+
+### Breaking Changes
+None. v1 API is fully backward compatible.
+
+### Deprecated
+- Direct remote database access mode will be removed in v3.0 (use `sync` + `local` modes instead)
+
+### Known Issues
+- Unicode characters in metric names may display incorrectly if MySQL connection charset is not UTF-8 (set `charset=utf8mb4` in connection config)
 
 ---
 
-## [1.1.2] - 2026-03-20
+## [1.3.0] - 2026-03-17
 
 ### Added
-- 🌍 **Multi-language support** — English and Simplified Chinese
-- 🔄 **Language switcher** — Toggle between 🇬🇧 EN and 🇨🇳 中文
-- 💾 **Preference persistence** — Language choice saved to localStorage
-
-### Technical
-- Lightweight i18n system (no dependencies)
-- JSON language packs (`en.json`, `zh.json`)
-- ~100 lines of new code
+- Basic ONA metrics implementation (P0 metrics)
+- Network graph visualization
+- Excel export functionality
 
 ---
 
-## [1.1.1] - 2026-03-20
+## [1.2.0] - 2026-03-10
 
 ### Added
-- ✅ **Technical debt cleanup** — NetworkGraphBuilder unit tests
-- ✅ **Exporter tests** — Mock tests for PDF/Excel/Image exporters
-- 📚 **Documentation updates** — README.md extended with v1.1 features
-
-### Fixed
-- 🧪 **Test coverage** — 127/127 tests passing (100%)
+- Discord adapter
+- GitHub adapter
+- Core analysis engine
 
 ---
 
-## [1.1.0] - 2026-03-20
+## [1.1.5] - 2026-03-01
 
 ### Added
-- 🌐 **Web Configuration UI** — Visual interface for non-technical users
-- 🔌 **Discord Adapter** — Extract network data from Discord servers
-- 🔌 **GitHub Adapter** — Analyze GitHub repository collaboration
-- 📊 **PDF Export** — Generate professional analysis reports
-- 📊 **Excel Export** — Export metrics to spreadsheet
-- 📊 **PNG Export** — Save network graphs as images
-- 🔗 **REST API** — HTTP endpoints for programmatic access
-
-### Changed
-- ♻️ **BaseAdapter refactored** — Minimal interface + helper utilities
-- 🏗️ **NetworkGraphBuilder** — Reusable graph construction tool
-
-### Technical
-- 583 lines Web UI code
-- 836 lines adapter code
-- 995 lines export code
-- 127 tests (100% passing)
+- Initial OCTO adapter
+- Basic network graph model
 
 ---
 
-## [1.0.0-beta] - 2026-03-20
-
-### Added
-- 🎉 **Initial release** — Complete ONA framework
-- 📊 **15 core metrics** — Network, collaboration, connoisseurship
-- 🤖 **5 bot functional tags** — T1-T5 classification
-- 🏆 **Hub Score** — Connoisseurship measurement
-- 🎨 **Interactive Dashboard** — ECharts visualization
-- 🔌 **DMWork Adapter** — Built-in data source support
-- 📚 **Comprehensive documentation** — 9,879 lines (EN + ZH)
-- 🧪 **Full test coverage** — 92/92 tests passing
-
-### Performance
-- Small networks (<15 nodes): <0.1s (100x faster than target)
-- Medium networks (50 nodes): ~0.03s (1000x faster)
-- Large networks (200 nodes): ~0.02s (6000x faster)
-- Memory usage: <30MB
-
----
-
-## Legend
-
-- 🎉 Major feature
-- ✨ Enhancement
-- 🐛 Bug fix
-- 📚 Documentation
-- 🔧 Configuration
-- 🧪 Testing
-- ♻️ Refactoring
-- 🔒 Security
-- 🌍 Internationalization
-- 🚀 Performance
+[2.0.0]: https://github.com/callme-YZ/OCTO-ONA/compare/v1.3.0...v2.0.0
+[1.3.0]: https://github.com/callme-YZ/OCTO-ONA/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/callme-YZ/OCTO-ONA/compare/v1.1.5...v1.2.0
+[1.1.5]: https://github.com/callme-YZ/OCTO-ONA/releases/tag/v1.1.5
