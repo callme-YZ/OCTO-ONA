@@ -91,6 +91,8 @@ CREATE TABLE IF NOT EXISTS sync_metadata (
     last_sync_at TIMESTAMP NOT NULL,
     sync_status ENUM('success', 'partial', 'failed') NOT NULL,
     messages_synced INT DEFAULT 0,
+  users_synced INT DEFAULT 0,
+  channels_synced INT DEFAULT 0,
     users_synced INT DEFAULT 0,
     channels_synced INT DEFAULT 0,
     error_message TEXT,
