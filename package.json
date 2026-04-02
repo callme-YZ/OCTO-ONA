@@ -34,6 +34,7 @@
     "multer": "^2.1.1",
     "mysql2": "^3.11.5",
     "puppeteer": "^24.40.0",
+    "yaml": "^2.8.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -1,0 +1,200 @@
+# Layer 7: Conversational ONA - Intent Recognition Rules
+# 意图识别规则配置
+
+intents:
+  # ============================================================================
+  # 1. METRICS_QUERY (指标查询)
+  # ============================================================================
+  - type: metrics_query
+    priority: 10
+    keywords:
+      - Hub Score
+      - hub score
+      - 活跃度
+      - 指标
+      - 得分
+      - 评分
+      - 分数
+    patterns:
+      - "我的.*(Hub Score|hub score|活跃度|指标|得分)"
+      - "(查询|查看|显示|看看|告诉我).*(Hub Score|hub score|活跃度|指标)"
+      - ".*(Hub Score|hub score).*是多少"
+      - ".*(Hub Score|hub score).*如何"
+      - ".*有多活跃"
+    examples:
+      - "我的 Hub Score 是多少？"
+      - "查询我的活跃度"
+      - "小A 的 Hub Score 如何？"
+      - "显示 Bot123 的指标"
+
+  # ============================================================================
+  # 2. NETWORK_QUERY (网络查询)
+  # ============================================================================
+  - type: network_query
+    priority: 9
+    keywords:
+      - 联系
+      - 协作
+      - 网络
+      - 关系
+      - 互动
+      - 交流
+      - 合作
+    patterns:
+      - "我和.*有联系"
+      - "我和.*协作"
+      - ".*(协作网络|社交网络|关系网)"
+      - "谁.*跟我.*联系"
+      - "我.*跟谁.*互动"
+      - ".*(联系人|协作对象)"
+    examples:
+      - "我和谁有联系？"
+      - "我的协作网络是什么样的？"
+      - "小P 的关系网怎么样？"
+      - "我最近和谁互动最多？"
+
+  # ============================================================================
+  # 3. RANKING_QUERY (排名查询)
+  # ============================================================================
+  - type: ranking_query
+    priority: 8
+    keywords:
+      - Top
+      - top
+      - 排名
+      - 排行
+      - 最活跃
+      - 最高
+      - 最强
+      - 前几
+      - 前.*名
+    patterns:
+      - "(Top|top)\\s*\\d+"
+      - "前\\s*\\d+.*名"
+      - "谁最活跃"
+      - "谁.*最高"
+      - "排名.*前"
+      - "活跃.*排行"
+      - ".*排行榜"
+    examples:
+      - "Top 5 最活跃的人是谁？"
+      - "谁的 Hub Score 最高？"
+      - "前 10 名活跃用户"
+      - "活跃度排行榜"
+
+  # ============================================================================
+  # 4. TREND_ANALYSIS (趋势分析)
+  # ============================================================================
+  - type: trend_analysis
+    priority: 7
+    keywords:
+      - 趋势
+      - 变化
+      - 增长
+      - 下降
+      - 最近
+      - 这周
+      - 上周
+      - 本月
+      - 上月
+      - 今天
+      - 昨天
+    patterns:
+      - "最近.*趋势"
+      - ".*变化.*如何"
+      - "(这周|上周|本月|上月).*"
+      - "最近.*天"
+      - "过去.*"
+      - ".*增长.*"
+      - ".*下降.*"
+    examples:
+      - "最近一周的消息量？"
+      - "我的活跃度趋势如何？"
+      - "这个月的协作变化"
+      - "过去 7 天的数据"
+
+  # ============================================================================
+  # 5. REPORT_GENERATION (报告生成)
+  # ============================================================================
+  - type: report_generation
+    priority: 6
+    keywords:
+      - 报告
+      - 总结
+      - 分析
+      - 汇总
+      - 生成
+      - 导出
+    patterns:
+      - "生成.*报告"
+      - "给我.*报告"
+      - ".*总结"
+      - ".*汇总"
+      - "导出.*"
+      - ".*分析报告"
+    examples:
+      - "给我一份本周报告"
+      - "生成协作分析报告"
+      - "我的个人报告"
+      - "导出 HTML 报告"
+
+# ============================================================================
+# Parameter Extraction Rules (参数提取规则)
+# ============================================================================
+parameters:
+  # 时间范围
+  time_range:
+    - pattern: "今天"
+      preset: "today"
+    - pattern: "昨天"
+      preset: "yesterday"
+    - pattern: "这周|本周"
+      preset: "this_week"
+    - pattern: "上周"
+      preset: "last_week"
+    - pattern: "最近一周"
+      days: "7"
+    - pattern: "这个?月|本月"
+      preset: "this_month"
+    - pattern: "上个?月"
+      preset: "last_month"
+    - pattern: "最近\\s*(\\d+)\\s*天"
+      days: "$1"
+    - pattern: "过去\\s*(\\d+)\\s*天"
+      days: "$1"
+
+  # 目标对象（用户/Bot）
+  target:
+    - pattern: "我的|我"
+      value: "self"
+    - pattern: "(小[A-Z]|小[APEM]|Mayo|Joy|Infinity|∞)"
+      value: "$1"
+    - pattern: "Bot\\s*\\d+"
+      value: "$0"
+    - pattern: "@([a-zA-Z0-9_]+)"
+      value: "$1"
+
+  # Top N
+  limit:
+    - pattern: "(Top|top)\\s*(\\d+)"
+      value: "$2"
+    - pattern: "前\\s*(\\d+)"
+      value: "$1"
+
+  # 指标类型
+  metric_type:
+    - pattern: "Hub Score|hub score"
+      value: "hub_score"
+    - pattern: "活跃度"
+      value: "activity_level"
+    - pattern: "消息量"
+      value: "message_count"
+    - pattern: "协作度"
+      value: "collaboration_score"
+
+  # 报告格式
+  report_format:
+    - pattern: "HTML|html"
+      value: "html"
+    - pattern: "PDF|pdf"
+      value: "pdf"

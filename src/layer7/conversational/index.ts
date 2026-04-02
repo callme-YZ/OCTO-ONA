@@ -10,8 +10,8 @@ export * from './types';
 // Interfaces
 export * from './interfaces';
 
-// Implementations (will be added in subsequent issues)
-// export { IntentParser } from './intent-parser';
+// Implementations
+export { IntentParser } from './intent-parser';
 // export { PermissionChecker } from './permission-checker';
 // export { ConversationalOrchestrator } from './orchestrator';
 // export { ResponseGenerator } from './response-generator';
