@@ -13,6 +13,6 @@ export * from './interfaces';
 // Implementations
 export { IntentParser } from './intent-parser';
 export { PermissionChecker, PermissionCheckerConfig } from './permission-checker';
-// export { ConversationalOrchestrator } from './orchestrator';
-// export { ResponseGenerator } from './response-generator';
-// export { AuditLogger } from './audit-logger';
+export { ResponseGenerator } from './response-generator';
+export { AuditLogger, AuditLoggerConfig } from './audit-logger';
+export { ConversationalOrchestrator, OrchestratorConfig } from './orchestrator';
