@@ -19,3 +19,4 @@ export { ConversationalOrchestrator, OrchestratorConfig } from './orchestrator';
 export { ReportTemplate, PersonalReportData } from './report-template';
 export { DMWorkIntegration, DMWorkConfig, SendMessageOptions } from './dmwork-integration';
 export { OnboardingHelper, ExampleQuery, Scenario } from './onboarding-helper';
+export { ErrorMessages, ErrorType } from './error-messages';
