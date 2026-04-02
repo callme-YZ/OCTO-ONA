@@ -2,10 +2,53 @@
 
 > Organizational Network Analysis Framework for Human-AI Collaboration
 
-**Version 2.0** — Database-driven metrics engine with local caching & CLI tools
+**Version 3.0** — Conversational ONA with Natural Language Interface 🎯
 
 [English](#english) | [中文](#中文)
 
+---
+
+## 🎉 What's New in v3.0
+
+### 💬 Conversational ONA (Layer 7)
+
+用自然语言查询和分析组织网络数据！
+
+- 🗣️ **Natural Language Queries** — "我的 Hub Score 是多少？"、"本周的活跃度如何？"
+- 🔐 **Fine-grained Permissions** — 只能查询自己和自己拥有的 Bot
+- 🤖 **Intelligent Responses** — 自动生成友好的摘要和建议
+- 💬 **Multi-turn Conversations** — 代词消解、时间范围继承
+- 📊 **5 Intent Types** — Metrics, Network, Ranking, Trends, Reports
+- 🚀 **User Onboarding** — 欢迎消息、帮助指南、场景化入口
+- 😊 **Friendly Errors** — 5 类错误的智能提示和建议
+
+**Try it now:**
+```
+我的 Hub Score 是多少？
+本周的活跃度如何？
+Top 5 最活跃的人是谁？
+给我一份本周报告
+```
+
+📖 [User Guide](docs/v3.0-user-guide.md) | 🔧 [API Reference](docs/v3.0-api-reference.md) | 📋 [Changelog](CHANGELOG.md)
+
+---
+
+## 🗺️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Layer 7: Conversational ONA (v3.0)     │
+│   Natural Language Query → Intent → Permission → Response  │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                      Layers 1-6: Core ONA (v2.0)            │
+│   Metrics Engine → Network Analysis → Dashboard            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
 ---
 
 ## 🎉 What's New in v2.0
