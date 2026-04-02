@@ -12,7 +12,7 @@ export * from './interfaces';
 
 // Implementations
 export { IntentParser } from './intent-parser';
-// export { PermissionChecker } from './permission-checker';
+export { PermissionChecker, PermissionCheckerConfig } from './permission-checker';
 // export { ConversationalOrchestrator } from './orchestrator';
 // export { ResponseGenerator } from './response-generator';
 // export { AuditLogger } from './audit-logger';
